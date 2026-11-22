@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>BLACK TEAM 影視團隊服事表</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans TC', 'sans-serif'],
+          },
+          colors: {
+            studio: {
+              bg: '#09090B',
+              card: '#121215',
+              elevated: '#18181C',
+              border: '#27272A',
+              gold: '#F59E0B',
+              goldHover: '#D97706',
+              crimson: '#991B1B',
+              crimsonLight: '#FCA5A5',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #09090B;
+      color: #F4F4F5;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Custom thin scrollbar for mobile tables */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #09090B;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #27272A;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3F3F46;
+    }
+    .sticky-col {
+      position: sticky;
+      left: 0;
+      z-index: 10;
+    }
+    select {
+      background-image: none;
+    }
+    /* Screenshot mode adjustments */
+    body.screenshot-mode .no-screenshot {
+      display: none !important;
+    }
+    body.screenshot-mode .screenshot-compact-cell {
+      padding-top: 4px !important;
+      padding-bottom: 4px !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[#09090B] text-zinc-100 font-sans antialiased pb-24">
+
+  <!-- Screenshot Floating Control Bar -->
+  <div id="screenshotBar" class="hidden fixed top-0 inset-x-0 z-50 bg-zinc-950/95 backdrop-blur-md border-b border-amber-500/40 px-3 py-2.5 shadow-2xl">
+    <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-1.5 overflow-x-auto">
+        <span class="text-xs font-bold text-amber-400 mr-1 whitespace-nowrap">截圖範圍：</span>
+        <button onclick="setScreenshotScope('all')" id="sc-all" class="px-2.5 py-1 rounded text-xs font-semibold bg-amber-500 text-black whitespace-nowrap">全部總表</button>
+        <button onclick="setScreenshotScope('sat_night')" id="sc-sat_night" class="px-2.5 py-1 rounded text-xs font-semibold bg-zinc-800 text-zinc-300 whitespace-nowrap">週六晚堂</button>
+        <button onclick="setScreenshotScope('sun_am')" id="sc-sun_am" class="px-2.5 py-1 rounded text-xs font-semibold bg-zinc-800 text-zinc-300 whitespace-nowrap">週日上午堂</button>
+        <button onclick="setScreenshotScope('sun_pm')" id="sc-sun_pm" class="px-2.5 py-1 rounded text-xs font-semibold bg-zinc-800 text-zinc-300 whitespace-nowrap">週日下午堂</button>
+      </div>
+      <button onclick="toggleScreenshotMode(false)" class="px-3 py-1 rounded-lg bg-red-900/80 hover:bg-red-800 text-red-100 text-xs font-bold border border-red-700/60 whitespace-nowrap">
+        退出截圖模式
+      </button>
+    </div>
+  </div>
+
+  <!-- Top Navigation Header -->
+  <header class="no-screenshot sticky top-0 z-30 bg-[#09090B]/95 backdrop-blur-md border-b border-zinc-800/90">
+    <div class="max-w-5xl mx-auto px-3 py-2.5 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-zinc-800 to-black border border-amber-500/40 flex items-center justify-center shadow-inner">
+          <span class="text-amber-400 font-black text-xs tracking-tighter">BT</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm sm:text-base font-black tracking-wider text-white">BLACK TEAM</h1>
+            <span id="syncBadge" class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700/70">本機儲存</span>
+          </div>
+          <p class="text-[10px] text-zinc-400 tracking-wide">影視團隊服事排班系統</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <button onclick="switchTab('my_schedule')" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-xs font-semibold text-amber-400 flex items-center gap-1 transition">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          <span>與我有關</span>
+        </button>
+
+        <button id="adminLoginBtn" onclick="openAdminModal()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-xs font-semibold text-zinc-300 flex items-center gap-1 transition">
+          <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          <span id="adminBtnText">管理者登入</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-5xl mx-auto px-2.5 sm:px-4 pt-3 space-y-3">
+
+    <!-- Month Selector & Quick Actions Bar -->
+    <section class="bg-[#121215] border border-zinc-800/90 rounded-xl p-2.5 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-1.5">
+        <button onclick="changeMonth(-1)" class="no-screenshot p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-800/90 text-center min-w-[125px]">
+          <span id="currentMonthLabel" class="text-sm sm:text-base font-extrabold tracking-wide text-amber-400">2026年 11月</span>
+        </div>
+        <button onclick="changeMonth(1)" class="no-screenshot p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <button onclick="resetToTodayMonth()" class="no-screenshot px-2 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[11px] font-medium text-zinc-400">
+          本月
+        </button>
+      </div>
+
+      <div class="no-screenshot flex flex-wrap items-center gap-1.5">
+        <button onclick="toggleScreenshotMode(true)" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-200 flex items-center gap-1">
+          <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <span>截圖模式</span>
+        </button>
+
+        <div id="adminScheduleActions" class="hidden flex flex-wrap items-center gap-1.5">
+          <button onclick="autoScheduleMonth()" class="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold flex items-center gap-1 shadow">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span>一鍵排班</span>
+          </button>
+          <button onclick="clearMonthSchedule()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-red-950/70 border border-zinc-700 hover:border-red-800 text-xs font-semibold text-red-400">
+            清空本月
+          </button>
+          <button onclick="openLineReminderModal()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-amber-500/40 text-xs font-semibold text-amber-300 flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+            <span>群組提醒文字</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 1: SCHEDULE VIEW -->
+    <div id="tab-schedule" class="space-y-3">
+
+      <!-- Team Rules & Notes Card -->
+      <section class="no-screenshot bg-[#121215] border border-zinc-800/90 rounded-xl overflow-hidden">
+        <div class="px-3 py-2 bg-zinc-900/80 border-b border-zinc-800/80 flex items-center justify-between">
+          <button onclick="toggleRulesCollapse()" class="flex items-center gap-2 text-left">
+            <span class="w-1.5 h-4 rounded-full bg-amber-500"></span>
+            <span class="text-xs sm:text-sm font-bold text-zinc-100">團隊規則與注意事項</span>
+            <svg id="rulesChevron" class="w-4 h-4 text-zinc-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <button id="editRulesBtn" onclick="toggleEditRules()" class="hidden px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-amber-400 text-xs font-semibold border border-zinc-700">
+            編輯規則
+          </button>
+        </div>
+        <div id="rulesBody" class="p-3">
+          <div id="rulesDisplay" class="text-xs sm:text-sm text-zinc-300 whitespace-pre-line leading-relaxed"></div>
+          <div id="rulesEditor" class="hidden space-y-2">
+            <textarea id="rulesTextarea" rows="5" class="w-full rounded-lg bg-zinc-950 border border-zinc-700 p-2.5 text-xs sm:text-sm text-zinc-100 focus:outline-none focus:border-amber-500"></textarea>
+            <div class="flex justify-end gap-2">
+              <button onclick="cancelEditRules()" class="px-3 py-1.5 rounded-lg bg-zinc-800 text-xs text-zinc-300">取消</button>
+              <button onclick="saveRules()" class="px-3 py-1.5 rounded-lg bg-amber-500 text-black text-xs font-bold">儲存規則</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Volunteer Support Claim Identity Bar (Dark Crimson Theme) -->
+      <section class="no-screenshot bg-[#1a0a0d] border border-red-900/70 rounded-xl p-2.5 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-sm">
+        <div class="flex items-start sm:items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-red-950/90 border border-red-800/70 flex items-center justify-center shrink-0 text-red-300">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/></svg>
+          </div>
+          <div>
+            <div class="text-xs sm:text-sm font-bold text-red-300">義工支援認領身份</div>
+            <div class="text-[11px] text-zinc-300">選擇名字後，可點擊空缺崗位的 <span class="text-red-300 font-bold">+ 支援</span>（表上以暗紅色顯示，再次點擊可取消）</div>
+          </div>
+        </div>
+        <select id="supportVolunteerSelect" onchange="onSupportVolunteerChange()" class="w-full sm:w-56 px-3 py-2 rounded-lg bg-[#120709] border border-red-900/80 text-xs sm:text-sm font-semibold text-red-200 focus:outline-none focus:border-red-500">
+          <option value="">-- 選擇我的名字 --</option>
+        </select>
+      </section>
+
+      <!-- Service Filter Sub-tabs (Mobile friendly) -->
+      <div class="no-screenshot flex items-center gap-1.5 overflow-x-auto pb-0.5">
+        <button onclick="setServiceFilter('all')" id="flt-all" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-black whitespace-nowrap">全部三場</button>
+        <button onclick="setServiceFilter('sat_night')" id="flt-sat_night" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 text-zinc-300 border border-zinc-800 whitespace-nowrap">週六晚堂</button>
+        <button onclick="setServiceFilter('sun_am')" id="flt-sun_am" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 text-zinc-300 border border-zinc-800 whitespace-nowrap">週日上午堂</button>
+        <button onclick="setServiceFilter('sun_pm')" id="flt-sun_pm" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 text-zinc-300 border border-zinc-800 whitespace-nowrap">週日下午堂</button>
+      </div>
+
+      <!-- Services Tables Container -->
+      <div id="servicesContainer" class="space-y-4"></div>
+    </div>
+
+    <!-- TAB 2: BLACKOUT DATES (義工劃休) -->
+    <div id="tab-blackout" class="hidden space-y-3">
+      <section class="bg-[#121215] border border-zinc-800/90 rounded-xl p-3 space-y-3">
+        <div>
+          <h2 class="text-sm sm:text-base font-extrabold text-white">義工無法服事日期登記（劃休）</h2>
+          <p class="text-xs text-zinc-400 mt-0.5">請先選擇您的名字，點擊該場次即可劃掉無法服事的日期（截止後自動鎖定）。</p>
+        </div>
+
+        <!-- Deadline Status Cards with Red Countdown -->
+        <div id="blackoutDeadlineCards" class="grid grid-cols-1 sm:grid-cols-3 gap-2"></div>
+
+        <!-- Select Volunteer -->
+        <div class="pt-1">
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">選擇義工姓名：</label>
+          <select id="blackoutVolunteerSelect" onchange="renderBlackoutGrid()" class="w-full sm:w-72 px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-700 text-sm font-semibold text-amber-400 focus:outline-none focus:border-amber-500">
+            <option value="">-- 請選擇您的名字 --</option>
+          </select>
+        </div>
+
+        <!-- Blackout Interactive Grid -->
+        <div id="blackoutGridContainer" class="pt-1"></div>
+      </section>
+    </div>
+
+    <!-- TAB 3: MY SCHEDULE (與我有關) -->
+    <div id="tab-my_schedule" class="hidden space-y-3">
+      <section class="bg-[#121215] border border-zinc-800/90 rounded-xl p-3 space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm sm:text-base font-extrabold text-amber-400">與我有關 — 個人服事查詢</h2>
+            <p class="text-xs text-zinc-400 mt-0.5">快速查看本月被安排或認領支援的所有場次與崗位</p>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">選擇查詢人員：</label>
+          <select id="myScheduleSelect" onchange="renderMySchedule()" class="w-full sm:w-72 px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-700 text-sm font-semibold text-white focus:outline-none focus:border-amber-500">
+            <option value="">-- 請選擇姓名 --</option>
+          </select>
+        </div>
+
+        <div id="myScheduleResults" class="space-y-2 pt-1"></div>
+      </section>
+    </div>
+
+    <!-- TAB 4: TEAM MANAGEMENT (團隊管理 - Admin Only or View) -->
+    <div id="tab-manage" class="hidden space-y-4">
+      <div id="manageLockedNotice" class="bg-[#121215] border border-zinc-800 rounded-xl p-6 text-center space-y-3">
+        <div class="w-12 h-12 rounded-full bg-zinc-900 border border-zinc-700 mx-auto flex items-center justify-center text-amber-400">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        </div>
+        <h3 class="text-base font-bold text-white">管理者專區</h3>
+        <p class="text-xs text-zinc-400">請輸入管理者密碼解鎖義工名單管理、各堂截止日設定與系統設定。</p>
+        <button onclick="openAdminModal()" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold">
+          輸入管理者密碼
+        </button>
+      </div>
+
+      <div id="manageAdminContent" class="hidden space-y-4">
+        <!-- Add / Edit Volunteer -->
+        <section class="bg-[#121215] border border-zinc-800 rounded-xl p-3.5 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 id="volFormTitle" class="text-sm font-extrabold text-amber-400">新增義工名單</h3>
+            <button id="cancelEditVolBtn" onclick="resetVolunteerForm()" class="hidden text-xs text-zinc-400 hover:text-white">取消編輯</button>
+          </div>
+          <input type="hidden" id="editVolId" value="" />
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-zinc-300 mb-1">義工姓名 *</label>
+              <input type="text" id="volNameInput" placeholder="例如：守仁" class="w-full px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-700 text-sm text-white focus:outline-none focus:border-amber-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-zinc-300 mb-1">可服事場次（可複選）*</label>
+              <div class="flex flex-wrap gap-2 pt-1">
+                <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-zinc-950 border border-zinc-800 text-xs cursor-pointer">
+                  <input type="checkbox" value="sat_night" class="vol-service-cb accent-amber-500" />
+                  <span>週六晚堂</span>
+                </label>
+                <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-zinc-950 border border-zinc-800 text-xs cursor-pointer">
+                  <input type="checkbox" value="sun_am" class="vol-service-cb accent-amber-500" />
+                  <span>週日上午堂</span>
+                </label>
+                <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-zinc-950 border border-zinc-800 text-xs cursor-pointer">
+                  <input type="checkbox" value="sun_pm" class="vol-service-cb accent-amber-500" />
+                  <span>週日下午堂</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-zinc-300 mb-1">可排崗位（若全不勾選，代表所有崗位皆可排）</label>
+            <div id="volRolesCheckboxes" class="flex flex-wrap gap-1.5"></div>
+          </div>
+
+          <div class="flex justify-end">
+            <button onclick="saveVolunteer()" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold">
+              儲存義工資料
+            </button>
+          </div>
+        </section>
+
+        <!-- Volunteer List -->
+        <section class="bg-[#121215] border border-zinc-800 rounded-xl p-3.5 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-extrabold text-white">現有義工名單 (<span id="volCountBadge">0</span>人)</h3>
+          </div>
+          <div id="volunteerListContainer" class="divide-y divide-zinc-800/80"></div>
+        </section>
+
+        <!-- Service Leaders (Cover / 組長 / 副手) Settings -->
+        <section class="bg-[#121215] border border-zinc-800 rounded-xl p-3.5 space-y-3">
+          <h3 class="text-sm font-extrabold text-amber-400">各堂團隊幹部標示（Cover / 組長 / 副手）</h3>
+          <div class="grid grid-cols-1 gap-2.5">
+            <div>
+              <label class="block text-xs font-semibold text-zinc-300 mb-1">週六晚堂</label>
+              <input type="text" id="leader_sat_night" class="w-full px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-xs text-zinc-100" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-zinc-300 mb-1">週日上午堂</label>
+              <input type="text" id="leader_sun_am" class="w-full px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-xs text-zinc-100" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-zinc-300 mb-1">週日下午堂</label>
+              <input type="text" id="leader_sun_pm" placeholder="例如：團隊Cover：守仁 / 組長：XXX" class="w-full px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-xs text-zinc-100" />
+            </div>
+          </div>
+          <div class="flex justify-end">
+            <button onclick="saveServiceLeaders()" class="px-3.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-400 text-xs font-bold border border-zinc-700">
+              儲存幹部標示
+            </button>
+          </div>
+        </section>
+
+        <!-- Monthly Blackout Deadline Rules -->
+        <section class="bg-[#121215] border border-zinc-800 rounded-xl p-3.5 space-y-3">
+          <div>
+            <h3 class="text-sm font-extrabold text-amber-400">各堂義工劃休截止日設定（每月固定幾號）</h3>
+            <p class="text-[11px] text-zinc-400 mt-0.5">設定每個月的截止日與時間（例如：前月 20 號 23:59 截止登記次月服事）。</p>
+          </div>
+          <div id="deadlineSettingsContainer" class="space-y-2.5"></div>
+          <div class="flex justify-end">
+            <button onclick="saveDeadlineRules()" class="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold">
+              儲存截止日設定
+            </button>
+          </div>
+        </section>
+
+        <!-- Admin Password & Cloud Sync Settings -->
+        <section class="bg-[#121215] border border-zinc-800 rounded-xl p-3.5 space-y-4">
+          <div class="space-y-2">
+            <h3 class="text-sm font-extrabold text-white">修改管理者密碼</h3>
+            <div class="flex flex-wrap items-center gap-2">
+              <input type="password" id="newAdminPasswordInput" placeholder="輸入新密碼" class="px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-xs text-white" />
+              <button onclick="changeAdminPassword()" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-400 text-xs font-bold border border-zinc-700">
+                更新密碼
+              </button>
+            </div>
+          </div>
+
+          <hr class="border-zinc-800" />
+
+          <!-- Optional Supabase Multi-Device Realtime Sync -->
+          <div class="space-y-2.5">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-extrabold text-amber-400">雲端資料庫同步設定 (Supabase 選填)</h3>
+              <span class="text-[10px] text-zinc-400">GitHub Pages 多人即時同步用</span>
+            </div>
+            <p class="text-[11px] text-zinc-400 leading-relaxed">
+              若上傳至 GitHub Pages 後希望全體義工手機即時看到彼此劃休與認領支援，可填入免費 Supabase 專案的 URL 與 Anon Key：
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <input type="text" id="sbUrlInput" placeholder="Supabase Project URL (https://xxx.supabase.co)" class="px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-xs text-zinc-200" />
+              <input type="text" id="sbKeyInput" placeholder="Supabase Anon Public Key" class="px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-xs text-zinc-200" />
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <button onclick="copySupabaseSql()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-[11px] text-zinc-300">
+                複製 SQL 建表指令
+              </button>
+              <div class="flex gap-2">
+                <button onclick="disconnectSupabase()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 text-xs text-zinc-400 border border-zinc-800">中斷連線</button>
+                <button onclick="saveSupabaseConfig()" class="px-3 py-1.5 rounded-lg bg-amber-500 text-black text-xs font-bold">連線並同步</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bottom Navigation Bar (Mobile-First) -->
+  <nav class="no-screenshot fixed bottom-0 inset-x-0 z-30 bg-[#09090B]/95 backdrop-blur-md border-t border-zinc-800">
+    <div class="max-w-5xl mx-auto grid grid-cols-4 h-14">
+      <button onclick="switchTab('schedule')" id="nav-schedule" class="flex flex-col items-center justify-center gap-0.5 text-amber-400 font-bold">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <span class="text-[11px]">服事總表</span>
+      </button>
+      <button onclick="switchTab('blackout')" id="nav-blackout" class="flex flex-col items-center justify-center gap-0.5 text-zinc-400 hover:text-zinc-200">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+        <span class="text-[11px]">義工劃休</span>
+      </button>
+      <button onclick="switchTab('my_schedule')" id="nav-my_schedule" class="flex flex-col items-center justify-center gap-0.5 text-zinc-400 hover:text-zinc-200">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        <span class="text-[11px]">與我有關</span>
+      </button>
+      <button onclick="switchTab('manage')" id="nav-manage" class="flex flex-col items-center justify-center gap-0.5 text-zinc-400 hover:text-zinc-200">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span class="text-[11px]">團隊管理</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Admin Login Modal -->
+  <div id="adminModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[#121215] border border-zinc-700 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-white">管理者登入</h3>
+        <button onclick="closeAdminModal()" class="text-zinc-400 hover:text-white">✕</button>
+      </div>
+      <p class="text-xs text-zinc-400">請輸入管理者密碼以解鎖排班編輯與團隊設定權限。</p>
+      <input type="password" id="adminPasswordInput" onkeydown="if(event.key==='Enter') submitAdminLogin()" placeholder="請輸入密碼" class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-700 text-sm text-white focus:outline-none focus:border-amber-500" />
+      <p id="adminLoginError" class="hidden text-xs text-red-400 font-semibold">密碼錯誤，請重新輸入。</p>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeAdminModal()" class="px-4 py-2 rounded-xl bg-zinc-800 text-xs font-semibold text-zinc-300">取消</button>
+        <button onclick="submitAdminLogin()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold">確認登入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LINE Group Reminder Copy Modal (Single Copy Button Only) -->
+  <div id="lineReminderModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[#121215] border border-zinc-700 rounded-2xl max-w-lg w-full p-4 sm:p-5 space-y-3 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-amber-400">本週三場服事提醒文字</h3>
+        <button onclick="closeLineReminderModal()" class="text-zinc-400 hover:text-white text-lg">✕</button>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-zinc-400">選擇週次：</label>
+        <select id="reminderWeekSelect" onchange="updateReminderText()" class="px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-700 text-xs text-white"></select>
+      </div>
+      <textarea id="reminderTextarea" rows="12" class="w-full rounded-xl bg-zinc-950 border border-zinc-800 p-3 text-xs text-zinc-200 leading-relaxed focus:outline-none focus:border-amber-500"></textarea>
+      <button onclick="copyReminderText()" id="copyReminderBtn" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs sm:text-sm font-extrabold shadow-lg transition">
+        一鍵複製提醒文字
+      </button>
+    </div>
+  </div>
+
+  <!-- Worship Song Edit Modal -->
+  <div id="songModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[#121215] border border-zinc-700 rounded-2xl max-w-md w-full p-4 sm:p-5 space-y-3 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 id="songModalTitle" class="text-sm sm:text-base font-extrabold text-amber-400">編輯敬拜讚美歌單</h3>
+        <button onclick="closeSongModal()" class="text-zinc-400 hover:text-white">✕</button>
+      </div>
+      <p class="text-[11px] text-zinc-400">每行一首歌曲，格式：<span class="text-zinc-200 font-mono">歌名 | YouTube連結</span>（連結選填）</p>
+      <textarea id="songModalTextarea" rows="6" placeholder="例如：&#10;恩典之路 | https://www.youtube.com/watch?v=...&#10;滿有能力" class="w-full rounded-xl bg-zinc-950 border border-zinc-700 p-3 text-xs text-zinc-100 leading-relaxed focus:outline-none focus:border-amber-500"></textarea>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeSongModal()" class="px-4 py-2 rounded-xl bg-zinc-800 text-xs text-zinc-300">取消</button>
+        <button onclick="saveWorshipSongs()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold">儲存歌單</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-zinc-900 border border-amber-500/60 text-xs font-bold text-amber-300 shadow-2xl whitespace-nowrap"></div>
+
+  <script>
+    const STORAGE_KEY = 'blackteam_github_v1_data';
+    const SB_CONFIG_KEY = 'blackteam_supabase_cfg';
+
+    const ROLES = [
+      '控場',
+      '導播',
+      '實習導播',
+      'CAM1',
+      'CAM2',
+      'CAM3',
+      'CAM4',
+      'CAM5(滑軌)',
+      '靜態攝影',
+      '實習靜態',
+      'PPR'
+    ];
+
+    const SERVICES = [
+      { id: 'sat_night', name: '週六晚堂', badgeClass: 'bg-purple-950/90 text-purple-300 border-purple-700/60' },
+      { id: 'sun_am', name: '週日上午堂', badgeClass: 'bg-amber-950/90 text-amber-300 border-amber-700/60' },
+      { id: 'sun_pm', name: '週日下午堂', badgeClass: 'bg-sky-950/90 text-sky-300 border-sky-700/60' }
+    ];
+
+    const DEFAULT_STATE = {
+      adminPassword: '202730',
+      rules: '1. 聚會前 40 分鐘準時抵達導播室／舞台就位試機與對講機測試。\n2. 若臨時無法服事，請提前自行尋找同崗位同工調班，並於群組告知組長與控場。\n3. 請於每月截止日前完成次月無法服事日期登記（劃休）。\n4. 服事期間請穿著深色／黑色系服裝，保持專業團隊形象。',
+      serviceLeaders: {
+        sat_night: '團隊Cover：守仁 / 組長：洛克 / 副手：羽宸',
+        sun_am: '團隊Cover：守仁 / 組長：依寧 / 副手：藝菲、丸子',
+        sun_pm: ''
+      },
+      deadlineRules: {
+        sat_night: { enabled: true, monthOffset: -1, day: 20, hour: 23, minute: 59 },
+        sun_am: { enabled: true, monthOffset: -1, day: 20, hour: 23, minute: 59 },
+        sun_pm: { enabled: true, monthOffset: -1, day: 20, hour: 23, minute: 59 }
+      },
+      volunteers: [], // Cleared initially as requested
+      blackouts: {},  // { "YYYY-MM": { "sat_night_YYYY-MM-DD": ["volId1"] } }
+      schedules: {},  // { "YYYY-MM": { "sat_night_YYYY-MM-DD": { "控場": { volId: "...", isSupport: false } } } }
+      speakers: {},   // { "sat_night_YYYY-MM-DD": "講員姓名" }
+      songs: {}       // { "sat_night_YYYY-MM-DD": [{ title: "歌名", url: "https://..." }] }
+    };
+
+    let state = loadState();
+    const now = new Date();
+    let currentYear = now.getFullYear();
+    let currentMonth = now.getMonth() + 1; // 1-12
+    let isAdmin = false;
+    let activeTab = 'schedule';
+    let serviceFilter = 'all';
+    let screenshotScope = 'all';
+    let currentSongEditKey = '';
+    let supabaseClient = null;
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return JSON.parse(JSON.stringify(DEFAULT_STATE));
+        const parsed = JSON.parse(raw);
+        return {
+          ...JSON.parse(JSON.stringify(DEFAULT_STATE)),
+          ...parsed,
+          serviceLeaders: { ...DEFAULT_STATE.serviceLeaders, ...(parsed.serviceLeaders || {}) },
+          deadlineRules: { ...DEFAULT_STATE.deadlineRules, ...(parsed.deadlineRules || {}) }
+        };
+      } catch (e) {
+        return JSON.parse(JSON.stringify(DEFAULT_STATE));
+      }
+    }
+
+    function saveState(syncToCloud = true) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (syncToCloud && supabaseClient) {
+        pushStateToSupabase();
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.remove('hidden');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.add('hidden'), 2400);
+    }
+
+    function getMonthKey(y = currentYear, m = currentMonth) {
+      return `${y}-${String(m).padStart(2, '0')}`;
+    }
+
+    function getServiceDatesForMonth(serviceId, year, month) {
+      const targetDay = serviceId === 'sat_night' ? 6 : 0; // 6=Sat, 0=Sun
+      const dates = [];
+      const daysInMonth = new Date(year, month, 0).getDate();
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dt = new Date(year, month - 1, d);
+        if (dt.getDay() === targetDay) {
+          const iso = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          dates.push({
+            iso,
+            label: `${month}/${d}`,
+            dayName: targetDay === 6 ? '六' : '日'
+          });
+        }
+      }
+      return dates;
+    }
+
+    function getDeadlineInfo(serviceId, year, month) {
+      const rule = state.deadlineRules[serviceId];
+      if (!rule || !rule.enabled) {
+        return { locked: false, label: '未設定截止限制', countdownText: '開放登記中', isUrgent: false };
+      }
+      // Target month + monthOffset (-1 means previous month, 0 means same month)
+      const targetDate = new Date(year, (month - 1) + Number(rule.monthOffset), 1);
+      const dYear = targetDate.getFullYear();
+      const dMonth = targetDate.getMonth() + 1;
+      const maxDay = new Date(dYear, dMonth, 0).getDate();
+      const clampedDay = Math.min(Number(rule.day), maxDay);
+      const deadlineDt = new Date(dYear, dMonth - 1, clampedDay, Number(rule.hour), Number(rule.minute), 59);
+
+      const prefix = Number(rule.monthOffset) === -1 ? '前月' : '當月';
+      const label = `${prefix}${clampedDay}號 (${dYear}/${String(dMonth).padStart(2, '0')}/${String(clampedDay).padStart(2, '0')} ${String(rule.hour).padStart(2, '0')}:${String(rule.minute).padStart(2, '0')})`;
+
+      const diffMs = deadlineDt.getTime() - Date.now();
+      if (diffMs <= 0) {
+        return { locked: true, label, countdownText: '已截止鎖定', isUrgent: true };
+      }
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      if (diffHours < 24) {
+        return { locked: false, label, countdownText: `今日關閉登記 (剩 ${Math.max(1, diffHours)} 小時)`, isUrgent: true };
+      }
+      return { locked: false, label, countdownText: `倒數 ${diffDays} 天關閉登記`, isUrgent: true };
+    }
+
+    // Navigation & Tabs
+    function switchTab(tab) {
+      activeTab = tab;
+      ['schedule', 'blackout', 'my_schedule', 'manage'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
+        const navBtn = document.getElementById(`nav-${t}`);
+        if (navBtn) {
+          navBtn.classList.toggle('text-amber-400', t === tab);
+          navBtn.classList.toggle('font-bold', t === tab);
+          navBtn.classList.toggle('text-zinc-400', t !== tab);
+        }
+      });
+      renderAll();
+    }
+
+    function changeMonth(delta) {
+      currentMonth += delta;
+      if (currentMonth > 12) {
+        currentMonth = 1;
+        currentYear++;
+      } else if (currentMonth < 1) {
+        currentMonth = 12;
+        currentYear--;
+      }
+      renderAll();
+    }
+
+    function resetToTodayMonth() {
+      const d = new Date();
+      currentYear = d.getFullYear();
+      currentMonth = d.getMonth() + 1;
+      renderAll();
+    }
+
+    // Screenshot Mode
+    function toggleScreenshotMode(enable) {
+      document.body.classList.toggle('screenshot-mode', enable);
+      document.getElementById('screenshotBar').classList.toggle('hidden', !enable);
+      if (enable) {
+        switchTab('schedule');
+        setScreenshotScope('all');
+      } else {
+        serviceFilter = 'all';
+        renderScheduleTables();
+      }
+    }
+
+    function setScreenshotScope(scope) {
+      screenshotScope = scope;
+      ['all', 'sat_night', 'sun_am', 'sun_pm'].forEach(s => {
+        const btn = document.getElementById(`sc-${s}`);
+        if (btn) {
+          btn.className = s === scope
+            ? 'px-2.5 py-1 rounded text-xs font-semibold bg-amber-500 text-black whitespace-nowrap'
+            : 'px-2.5 py-1 rounded text-xs font-semibold bg-zinc-800 text-zinc-300 whitespace-nowrap';
+        }
+      });
+      renderScheduleTables();
+    }
+
+    function setServiceFilter(flt) {
+      serviceFilter = flt;
+      ['all', 'sat_night', 'sun_am', 'sun_pm'].forEach(s => {
+        const btn = document.getElementById(`flt-${s}`);
+        if (btn) {
+          btn.className = s === flt
+            ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-black whitespace-nowrap'
+            : 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 text-zinc-300 border border-zinc-800 whitespace-nowrap';
+        }
+      });
+      renderScheduleTables();
+    }
+
+    // Admin Auth
+    function openAdminModal() {
+      if (isAdmin) {
+        isAdmin = false;
+        updateAdminUI();
+        renderAll();
+        showToast('已登出管理者模式');
+        return;
+      }
+      document.getElementById('adminPasswordInput').value = '';
+      document.getElementById('adminLoginError').classList.add('hidden');
+      document.getElementById('adminModal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('adminPasswordInput').focus(), 50);
+    }
+
+    function closeAdminModal() {
+      document.getElementById('adminModal').classList.add('hidden');
+    }
+
+    function submitAdminLogin() {
+      const val = document.getElementById('adminPasswordInput').value.trim();
+      if (val === state.adminPassword) {
+        isAdmin = true;
+        closeAdminModal();
+        updateAdminUI();
+        renderAll();
+        showToast('管理者登入成功');
+      } else {
+        document.getElementById('adminLoginError').classList.remove('hidden');
+      }
+    }
+
+    function updateAdminUI() {
+      const btn = document.getElementById('adminLoginBtn');
+      const txt = document.getElementById('adminBtnText');
+      if (isAdmin) {
+        btn.className = 'px-2.5 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/60 text-xs font-bold text-amber-300 flex items-center gap-1 transition';
+        txt.textContent = '管理者已登入 (登出)';
+      } else {
+        btn.className = 'px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-xs font-semibold text-zinc-300 flex items-center gap-1 transition';
+        txt.textContent = '管理者登入';
+      }
+      document.getElementById('adminScheduleActions').classList.toggle('hidden', !isAdmin);
+      document.getElementById('editRulesBtn').classList.toggle('hidden', !isAdmin);
+      document.getElementById('manageLockedNotice').classList.toggle('hidden', isAdmin);
+      document.getElementById('manageAdminContent').classList.toggle('hidden', !isAdmin);
+    }
+
+    // Rules Editing
+    function toggleRulesCollapse() {
+      const body = document.getElementById('rulesBody');
+      const chev = document.getElementById('rulesChevron');
+      body.classList.toggle('hidden');
+      chev.classList.toggle('-rotate-90', body.classList.contains('hidden'));
+    }
+
+    function toggleEditRules() {
+      document.getElementById('rulesBody').classList.remove('hidden');
+      document.getElementById('rulesDisplay').classList.add('hidden');
+      document.getElementById('rulesEditor').classList.remove('hidden');
+      document.getElementById('rulesTextarea').value = state.rules;
+    }
+
+    function cancelEditRules() {
+      document.getElementById('rulesDisplay').classList.remove('hidden');
+      document.getElementById('rulesEditor').classList.add('hidden');
+    }
+
+    function saveRules() {
+      state.rules = document.getElementById('rulesTextarea').value;
+      saveState();
+      cancelEditRules();
+      renderRules();
+      showToast('團隊規則已更新');
+    }
+
+    function renderRules() {
+      document.getElementById('rulesDisplay').textContent = state.rules;
+    }
+
+    // Render Main Schedule Tables
+    function renderScheduleTables() {
+      const container = document.getElementById('servicesContainer');
+      const mKey = getMonthKey();
+      const monthSched = state.schedules[mKey] || {};
+      const monthBlackout = state.blackouts[mKey] || {};
+      const activeSupportVolId = document.getElementById('supportVolunteerSelect').value;
+      const isScMode = document.body.classList.contains('screenshot-mode');
+
+      const visibleServices = SERVICES.filter(s => {
+        if (isScMode) return screenshotScope === 'all' || screenshotScope === s.id;
+        return serviceFilter === 'all' || serviceFilter === s.id;
+      });
+
+      container.innerHTML = visibleServices.map(srv => {
+        const dates = getServiceDatesForMonth(srv.id, currentYear, currentMonth);
+        const leaderText = state.serviceLeaders[srv.id] || '';
+
+        // Header columns
+        const dateHeaders = dates.map(d => `
+          <th class="px-1.5 py-2 text-center border-l border-zinc-800/90 min-w-[78px] sm:min-w-[96px] bg-zinc-900/90">
+            <div class="text-xs sm:text-sm font-black text-white">${d.label}</div>
+            <div class="text-[10px] text-zinc-400">週${d.dayName}</div>
+          </th>
+        `).join('');
+
+        // Speaker row
+        const speakerCells = dates.map(d => {
+          const slotKey = `${srv.id}_${d.iso}`;
+          const spk = state.speakers[slotKey] || '';
+          if (isAdmin && !isScMode) {
+            return `
+              <td class="px-1 py-1.5 border-l border-zinc-800/80 bg-zinc-950/60">
+                <input type="text" value="${escapeHtml(spk)}" placeholder="講員"
+                  onchange="updateSpeaker('${slotKey}', this.value)"
+                  class="w-full px-1.5 py-1 rounded bg-zinc-900 border border-zinc-800 text-[11px] text-center text-amber-300 font-semibold focus:outline-none focus:border-amber-500" />
+              </td>
+            `;
+          }
+          return `
+            <td class="px-1 py-1.5 text-center border-l border-zinc-800/80 bg-zinc-950/60 text-[11px] font-semibold text-amber-300/90">
+              ${spk ? escapeHtml(spk) : '<span class="text-zinc-600">-</span>'}
+            </td>
+          `;
+        }).join('');
+
+        // Role rows
+        const roleRows = ROLES.map(role => {
+          const cells = dates.map(d => {
+            const slotKey = `${srv.id}_${d.iso}`;
+            const dayAssign = monthSched[slotKey] || {};
+            const entry = dayAssign[role]; // { volId, isSupport } or undefined
+            const assignedVol = entry ? state.volunteers.find(v => v.id === entry.volId) : null;
+
+            // Admin edit mode: filtered dropdown showing ONLY volunteers available for this service & not blacked out
+            if (isAdmin && !isScMode) {
+              const blackedIds = monthBlackout[slotKey] || [];
+              const eligibleVols = state.volunteers.filter(v =>
+                v.services.includes(srv.id) &&
+                !blackedIds.includes(v.id) &&
+                (!v.roles || v.roles.length === 0 || v.roles.includes(role))
+              );
+
+              const optionsHtml = eligibleVols.map(v => {
+                // Check if already assigned to another role in same service/date
+                const otherRoles = Object.entries(dayAssign)
+                  .filter(([r, e]) => r !== role && e && e.volId === v.id)
+                  .map(([r]) => r);
+                // Count total assignments this month
+                let monthCount = 0;
+                Object.values(monthSched).forEach(sObj => {
+                  Object.values(sObj).forEach(e => {
+                    if (e && e.volId === v.id) monthCount++;
+                  });
+                });
+                const tag = otherRoles.length > 0 ? ` [同場:${otherRoles.join(',')}]` : ` (${monthCount}場)`;
+                const selected = entry && entry.volId === v.id ? 'selected' : '';
+                return `<option value="${v.id}" ${selected}>${escapeHtml(v.name)}${tag}</option>`;
+              }).join('');
+
+              // If currently assigned vol is no longer in eligible list, still show them so value isn't lost
+              let extraOption = '';
+              if (assignedVol && !eligibleVols.some(v => v.id === assignedVol.id)) {
+                extraOption = `<option value="${assignedVol.id}" selected>${escapeHtml(assignedVol.name)} (已劃休/不符)</option>`;
+              }
+
+              const selectBorder = entry && entry.isSupport
+                ? 'border-red-700 bg-red-950/70 text-red-200 font-bold'
+                : (assignedVol ? 'border-zinc-700 bg-zinc-900 text-white font-semibold' : 'border-zinc-800/80 bg-zinc-950 text-zinc-500');
+
+              return `
+                <td class="px-1 py-1 border-l border-zinc-800/80">
+                  <select onchange="assignSlot('${slotKey}', '${role}', this.value)"
+                    class="w-full px-1 py-1 rounded border text-[11px] text-center focus:outline-none focus:border-amber-500 ${selectBorder}">
+                    <option value="">-- 空缺 --</option>
+                    ${extraOption}
+                    ${optionsHtml}
+                  </select>
+                </td>
+              `;
+            }
+
+            // Public / Volunteer View Mode
+            if (assignedVol) {
+              if (entry.isSupport) {
+                const canUnclaim = !isScMode && activeSupportVolId && activeSupportVolId === assignedVol.id;
+                return `
+                  <td class="px-1 py-1.5 screenshot-compact-cell text-center border-l border-zinc-800/80">
+                    <span ${canUnclaim ? `onclick="toggleVolunteerSupport('${slotKey}', '${role}')"` : ''}
+                      title="${canUnclaim ? '點擊取消支援' : '義工支援認領'}"
+                      class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-red-950/90 border border-red-700/80 text-red-200 text-[11px] font-bold ${canUnclaim ? 'cursor-pointer hover:bg-red-900' : ''}">
+                      <span>${escapeHtml(assignedVol.name)}</span>
+                      <span class="text-[9px] text-red-300/90">(支)</span>
+                    </span>
+                  </td>
+                `;
+              }
+              return `
+                <td class="px-1 py-1.5 screenshot-compact-cell text-center border-l border-zinc-800/80 text-xs font-semibold text-zinc-100">
+                  ${escapeHtml(assignedVol.name)}
+                </td>
+              `;
+            }
+
+            // Empty slot: if volunteer selected in Support Bar, show dark crimson "+ 支援" button
+            if (!isScMode && activeSupportVolId) {
+              return `
+                <td class="px-1 py-1 text-center border-l border-zinc-800/80">
+                  <button onclick="toggleVolunteerSupport('${slotKey}', '${role}')"
+                    class="px-2 py-0.5 rounded bg-red-950/80 hover:bg-red-900 border border-red-800/80 text-[10px] font-bold text-red-200 transition">
+                    + 支援
+                  </button>
+                </td>
+              `;
+            }
+
+            return `
+              <td class="px-1 py-1.5 screenshot-compact-cell text-center border-l border-zinc-800/80 text-[11px] text-zinc-600">
+                -
+              </td>
+            `;
+          }).join('');
+
+          return `
+            <tr class="border-t border-zinc-800/70 hover:bg-zinc-900/40">
+              <td class="sticky-col bg-[#121215] px-2 py-1.5 screenshot-compact-cell text-[11px] sm:text-xs font-bold text-zinc-300 whitespace-nowrap border-r border-zinc-800/80">
+                ${role}
+              </td>
+              ${cells}
+            </tr>
+          `;
+        }).join('');
+
+        // Worship Songs Section at bottom of each service card
+        const worshipCols = dates.map(d => {
+          const slotKey = `${srv.id}_${d.iso}`;
+          const songList = state.songs[slotKey] || [];
+          const songsHtml = songList.length > 0
+            ? songList.map((s, idx) => {
+                if (s.url) {
+                  return `
+                    <a href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer"
+                      class="flex items-center gap-1 text-[11px] text-amber-300 hover:text-amber-200 underline decoration-amber-500/40 truncate">
+                      <span class="text-zinc-500">${idx + 1}.</span>
+                      <span class="truncate">${escapeHtml(s.title)}</span>
+                      <svg class="w-3 h-3 shrink-0 text-red-400" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    </a>
+                  `;
+                }
+                return `<div class="text-[11px] text-zinc-300 truncate"><span class="text-zinc-500">${idx + 1}.</span> ${escapeHtml(s.title)}</div>`;
+              }).join('')
+            : '<div class="text-[11px] text-zinc-600">尚未設定歌單</div>';
+
+          return `
+            <div class="bg-zinc-950/80 border border-zinc-800/80 rounded-lg p-2 space-y-1">
+              <div class="flex items-center justify-between border-b border-zinc-800/80 pb-1">
+                <span class="text-[11px] font-bold text-zinc-300">${d.label} (週${d.dayName})</span>
+                ${isAdmin && !isScMode ? `<button onclick="openSongModal('${slotKey}', '${srv.name} ${d.label}')" class="text-[10px] text-amber-400 hover:underline font-semibold">編輯</button>` : ''}
+              </div>
+              <div class="space-y-1 pt-0.5">${songsHtml}</div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <section class="bg-[#121215] border border-zinc-800/90 rounded-xl overflow-hidden shadow-lg">
+            <!-- Service Header with Team Cover / Leader / Deputy -->
+            <div class="px-3 py-2 bg-zinc-900/95 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-md border text-xs font-extrabold ${srv.badgeClass}">${srv.name}</span>
+                <span class="text-xs text-zinc-400 font-medium">${currentMonth}月 · 共 ${dates.length} 週</span>
+                ${leaderText ? `<span class="text-[11px] sm:text-xs font-semibold text-amber-300/95 bg-zinc-950/90 px-2 py-0.5 rounded border border-zinc-800">${escapeHtml(leaderText)}</span>` : ''}
+              </div>
+              <span class="text-[11px] font-black tracking-widest text-zinc-500">BLACK TEAM</span>
+            </div>
+
+            <!-- Compact Mobile-Friendly Schedule Grid -->
+            <div class="overflow-x-auto">
+              <table class="w-full border-collapse text-left">
+                <thead>
+                  <tr class="border-b border-zinc-800">
+                    <th class="sticky-col bg-zinc-900 px-2 py-2 text-[11px] font-extrabold text-zinc-400 border-r border-zinc-800 min-w-[78px]">崗位 / 日期</th>
+                    ${dateHeaders}
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Speaker Row -->
+                  <tr class="border-b border-zinc-800 bg-zinc-950/50">
+                    <td class="sticky-col bg-zinc-950 px-2 py-1.5 text-[11px] font-bold text-amber-400 border-r border-zinc-800">當天講員</td>
+                    ${speakerCells}
+                  </tr>
+                  ${roleRows}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Worship Songs Footer -->
+            <div class="no-screenshot px-3 py-2.5 bg-zinc-900/50 border-t border-zinc-800/90 space-y-2">
+              <div class="flex items-center gap-1.5 text-xs font-bold text-zinc-300">
+                <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+                <span>當週敬拜讚美歌單（點擊歌名可開啟 YouTube）</span>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2">
+                ${worshipCols}
+              </div>
+            </div>
+          </section>
+        `;
+      }).join('');
+    }
+
+    // Schedule Actions
+    function updateSpeaker(slotKey, val) {
+      state.speakers[slotKey] = val.trim();
+      saveState();
+      showToast('已更新講員');
+    }
+
+    function assignSlot(slotKey, role, volId) {
+      const mKey = getMonthKey();
+      if (!state.schedules[mKey]) state.schedules[mKey] = {};
+      if (!state.schedules[mKey][slotKey]) state.schedules[mKey][slotKey] = {};
+
+      if (!volId) {
+        delete state.schedules[mKey][slotKey][role];
+      } else {
+        state.schedules[mKey][slotKey][role] = { volId, isSupport: false };
+      }
+      saveState();
+      renderScheduleTables();
+    }
+
+    function toggleVolunteerSupport(slotKey, role) {
+      const volId = document.getElementById('supportVolunteerSelect').value;
+      if (!volId) return;
+      const mKey = getMonthKey();
+      if (!state.schedules[mKey]) state.schedules[mKey] = {};
+      if (!state.schedules[mKey][slotKey]) state.schedules[mKey][slotKey] = {};
+
+      const existing = state.schedules[mKey][slotKey][role];
+      if (existing && existing.volId === volId && existing.isSupport) {
+        delete state.schedules[mKey][slotKey][role];
+        showToast('已取消支援認領');
+      } else if (!existing) {
+        state.schedules[mKey][slotKey][role] = { volId, isSupport: true };
+        showToast('已認領支援該崗位！');
+      }
+      saveState();
+      renderScheduleTables();
+    }
+
+    function autoScheduleMonth() {
+      if (state.volunteers.length === 0) {
+        showToast('請先至「團隊管理」新增義工名單');
+        return;
+      }
+      const mKey = getMonthKey();
+      if (!state.schedules[mKey]) state.schedules[mKey] = {};
+      const monthBlackout = state.blackouts[mKey] || {};
+
+      // Count existing assignments for fairness
+      const counts = {};
+      state.volunteers.forEach(v => counts[v.id] = 0);
+      Object.values(state.schedules[mKey]).forEach(dayObj => {
+        Object.values(dayObj).forEach(entry => {
+          if (entry && entry.volId && counts[entry.volId] !== undefined) {
+            counts[entry.volId]++;
+          }
+        });
+      });
+
+      SERVICES.forEach(srv => {
+        const dates = getServiceDatesForMonth(srv.id, currentYear, currentMonth);
+        dates.forEach(d => {
+          const slotKey = `${srv.id}_${d.iso}`;
+          if (!state.schedules[mKey][slotKey]) state.schedules[mKey][slotKey] = {};
+          const dayAssign = state.schedules[mKey][slotKey];
+          const blackedIds = monthBlackout[slotKey] || [];
+          const usedInSameService = new Set(Object.values(dayAssign).filter(Boolean).map(e => e.volId));
+
+          ROLES.forEach(role => {
+            if (dayAssign[role] && dayAssign[role].volId) return; // keep existing manual/support assignments
+
+            const candidates = state.volunteers.filter(v =>
+              v.services.includes(srv.id) &&
+              !blackedIds.includes(v.id) &&
+              !usedInSameService.has(v.id) &&
+              (!v.roles || v.roles.length === 0 || v.roles.includes(role))
+            );
+
+            if (candidates.length > 0) {
+              // Sort by lowest monthly count + slight random tie-breaker
+              candidates.sort((a, b) => (counts[a.id] - counts[b.id]) || (Math.random() - 0.5));
+              const chosen = candidates[0];
+              dayAssign[role] = { volId: chosen.id, isSupport: false };
+              usedInSameService.add(chosen.id);
+              counts[chosen.id]++;
+            }
+          });
+        });
+      });
+
+      saveState();
+      renderScheduleTables();
+      showToast('已完成本月智慧排班！');
+    }
+
+    function clearMonthSchedule() {
+      const mKey = getMonthKey();
+      state.schedules[mKey] = {};
+      saveState();
+      renderScheduleTables();
+      showToast('已清空本月排班');
+    }
+
+    // Worship Songs Modal
+    function openSongModal(slotKey, titleLabel) {
+      currentSongEditKey = slotKey;
+      document.getElementById('songModalTitle').textContent = `編輯歌單 — ${titleLabel}`;
+      const list = state.songs[slotKey] || [];
+      document.getElementById('songModalTextarea').value = list.map(s => s.url ? `${s.title} | ${s.url}` : s.title).join('\n');
+      document.getElementById('songModal').classList.remove('hidden');
+    }
+
+    function closeSongModal() {
+      document.getElementById('songModal').classList.add('hidden');
+    }
+
+    function saveWorshipSongs() {
+      const lines = document.getElementById('songModalTextarea').value.split('\n').map(l => l.trim()).filter(Boolean);
+      state.songs[currentSongEditKey] = lines.map(line => {
+        const parts = line.split('|');
+        return {
+          title: parts[0].trim(),
+          url: parts[1] ? parts[1].trim() : ''
+        };
+      });
+      saveState();
+      closeSongModal();
+      renderScheduleTables();
+      showToast('歌單已儲存');
+    }
+
+    // LINE Reminder Text Modal
+    function openLineReminderModal() {
+      const sel = document.getElementById('reminderWeekSelect');
+      const satDates = getServiceDatesForMonth('sat_night', currentYear, currentMonth);
+      const sunDates = getServiceDatesForMonth('sun_am', currentYear, currentMonth);
+      const maxWeeks = Math.max(satDates.length, sunDates.length);
+
+      sel.innerHTML = '';
+      for (let i = 0; i < maxWeeks; i++) {
+        const sLabel = satDates[i] ? `週六 ${satDates[i].label}` : '';
+        const uLabel = sunDates[i] ? `週日 ${sunDates[i].label}` : '';
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = `第 ${i + 1} 週 (${[sLabel, uLabel].filter(Boolean).join(' / ')})`;
+        sel.appendChild(opt);
+      }
+      updateReminderText();
+      document.getElementById('lineReminderModal').classList.remove('hidden');
+    }
+
+    function closeLineReminderModal() {
+      document.getElementById('lineReminderModal').classList.add('hidden');
+    }
+
+    function updateReminderText() {
+      const weekIdx = Number(document.getElementById('reminderWeekSelect').value || 0);
+      const mKey = getMonthKey();
+      const monthSched = state.schedules[mKey] || {};
+      let lines = [`【BLACK TEAM 本週服事提醒】\n`];
+
+      SERVICES.forEach(srv => {
+        const dates = getServiceDatesForMonth(srv.id, currentYear, currentMonth);
+        const d = dates[weekIdx];
+        if (!d) return;
+        const slotKey = `${srv.id}_${d.iso}`;
+        const dayAssign = monthSched[slotKey] || {};
+        const spk = state.speakers[slotKey] ? `（講員：${state.speakers[slotKey]}）` : '';
+
+        lines.push(`■ ${srv.name} ${d.label}(週${d.dayName})${spk}`);
+        const roleStrings = [];
+        ROLES.forEach(role => {
+          const entry = dayAssign[role];
+          if (entry && entry.volId) {
+            const v = state.volunteers.find(x => x.id === entry.volId);
+            if (v) {
+              roleStrings.push(`${role}：${v.name}${entry.isSupport ? '(支援)' : ''}`);
+            }
+          }
+        });
+        lines.push(roleStrings.length > 0 ? roleStrings.join('、') : '（尚未排班）');
+        lines.push('');
+      });
+
+      lines.push('請大家準時到場試機，辛苦了！');
+      document.getElementById('reminderTextarea').value = lines.join('\n');
+    }
+
+    function copyReminderText() {
+      const ta = document.getElementById('reminderTextarea');
+      ta.select();
+      ta.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(ta.value).then(() => {
+        showToast('已複製群組提醒文字，可直接貼上！');
+      }).catch(() => {
+        document.execCommand('copy');
+        showToast('已複製群組提醒文字！');
+      });
+    }
+
+    // Blackout Tab Rendering
+    function renderBlackoutTab() {
+      const cardsContainer = document.getElementById('blackoutDeadlineCards');
+      cardsContainer.innerHTML = SERVICES.map(srv => {
+        const info = getDeadlineInfo(srv.id, currentYear, currentMonth);
+        return `
+          <div class="p-2.5 rounded-xl bg-zinc-950 border ${info.locked ? 'border-red-900/80' : 'border-zinc-800'} flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <div class="text-xs font-extrabold text-white">${srv.name}</div>
+              <div class="text-[11px] text-zinc-400 truncate">截止：${info.label}</div>
+            </div>
+            <span class="shrink-0 px-2 py-1 rounded-md bg-red-950/90 border border-red-700/80 text-[11px] font-extrabold text-red-400">
+              ${info.countdownText}
+            </span>
+          </div>
+        `;
+      }).join('');
+
+      renderBlackoutGrid();
+    }
+
+    function renderBlackoutGrid() {
+      const container = document.getElementById('blackoutGridContainer');
+      const volId = document.getElementById('blackoutVolunteerSelect').value;
+      if (!volId) {
+        container.innerHTML = `<div class="p-6 text-center text-xs text-zinc-500 border border-dashed border-zinc-800 rounded-xl">請先從上方選單選擇您的名字</div>`;
+        return;
+      }
+      const vol = state.volunteers.find(v => v.id === volId);
+      if (!vol) return;
+
+      const mKey = getMonthKey();
+      const monthBlackout = state.blackouts[mKey] || {};
+
+      container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-3 gap-3">` + SERVICES.map(srv => {
+        const canServe = vol.services.includes(srv.id);
+        const info = getDeadlineInfo(srv.id, currentYear, currentMonth);
+        const dates = getServiceDatesForMonth(srv.id, currentYear, currentMonth);
+
+        const dateBtns = dates.map(d => {
+          const slotKey = `${srv.id}_${d.iso}`;
+          const isBlacked = (monthBlackout[slotKey] || []).includes(volId);
+          const disabled = !canServe || info.locked;
+
+          let btnClass = 'bg-zinc-900 border-zinc-800 text-zinc-200 hover:border-zinc-600';
+          let statusTag = '可服事';
+          if (!canServe) {
+            btnClass = 'bg-zinc-950/60 border-zinc-900 text-zinc-600 cursor-not-allowed';
+            statusTag = '非此堂同工';
+          } else if (isBlacked) {
+            btnClass = 'bg-red-950/90 border-red-700 text-red-200 font-bold';
+            statusTag = '已劃休 ✕';
+          }
+
+          return `
+            <button ${disabled ? 'disabled' : `onclick="toggleBlackout('${slotKey}')"`}
+              class="w-full px-3 py-2 rounded-lg border text-xs flex items-center justify-between transition ${btnClass} ${disabled ? 'opacity-70' : ''}">
+              <span>${d.label} (週${d.dayName})</span>
+              <span class="text-[11px]">${statusTag}</span>
+            </button>
+          `;
+        }).join('');
+
+        return `
+          <div class="bg-zinc-950 border border-zinc-800/90 rounded-xl p-3 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-extrabold text-white">${srv.name}</span>
+              <span class="text-[10px] font-bold text-red-400">${info.countdownText}</span>
+            </div>
+            <div class="space-y-1.5">${dateBtns}</div>
+          </div>
+        `;
+      }).join('') + `</div>`;
+    }
+
+    function toggleBlackout(slotKey) {
+      const volId = document.getElementById('blackoutVolunteerSelect').value;
+      if (!volId) return;
+      const mKey = getMonthKey();
+      if (!state.blackouts[mKey]) state.blackouts[mKey] = {};
+      if (!state.blackouts[mKey][slotKey]) state.blackouts[mKey][slotKey] = [];
+
+      const arr = state.blackouts[mKey][slotKey];
+      const idx = arr.indexOf(volId);
+      if (idx >= 0) {
+        arr.splice(idx, 1);
+      } else {
+        arr.push(volId);
+      }
+      saveState();
+      renderBlackoutGrid();
+    }
+
+    // My Schedule ("與我有關")
+    function renderMySchedule() {
+      const container = document.getElementById('myScheduleResults');
+      const volId = document.getElementById('myScheduleSelect').value;
+      if (!volId) {
+        container.innerHTML = `<div class="p-6 text-center text-xs text-zinc-500 border border-dashed border-zinc-800 rounded-xl">請選擇姓名以查詢本月服事班表</div>`;
+        return;
+      }
+
+      const mKey = getMonthKey();
+      const monthSched = state.schedules[mKey] || {};
+      const items = [];
+
+      SERVICES.forEach(srv => {
+        const dates = getServiceDatesForMonth(srv.id, currentYear, currentMonth);
+        dates.forEach(d => {
+          const slotKey = `${srv.id}_${d.iso}`;
+          const dayAssign = monthSched[slotKey] || {};
+          ROLES.forEach(role => {
+            const entry = dayAssign[role];
+            if (entry && entry.volId === volId) {
+              items.push({
+                dateLabel: `${d.label} (週${d.dayName})`,
+                iso: d.iso,
+                serviceName: srv.name,
+                role,
+                isSupport: entry.isSupport,
+                speaker: state.speakers[slotKey] || ''
+              });
+            }
+          });
+        });
+      });
+
+      items.sort((a, b) => a.iso.localeCompare(b.iso));
+
+      if (items.length === 0) {
+        container.innerHTML = `<div class="p-6 text-center text-xs text-zinc-400 bg-zinc-950 border border-zinc-800 rounded-xl">${currentMonth}月目前尚無您的服事安排。</div>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="text-xs font-bold text-zinc-300 mb-2">本月共 <span class="text-amber-400 text-sm">${items.length}</span> 場服事：</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          ${items.map(it => `
+            <div class="p-3 rounded-xl border ${it.isSupport ? 'bg-red-950/30 border-red-800/80' : 'bg-zinc-950 border-zinc-800'} flex items-center justify-between">
+              <div>
+                <div class="text-xs sm:text-sm font-extrabold text-white">${it.dateLabel} · ${it.serviceName}</div>
+                ${it.speaker ? `<div class="text-[11px] text-zinc-400 mt-0.5">講員：${escapeHtml(it.speaker)}</div>` : ''}
+              </div>
+              <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold ${it.isSupport ? 'bg-red-950 text-red-200 border border-red-700' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}">
+                ${it.role}${it.isSupport ? ' (支援)' : ''}
+              </span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // Team Management Tab
+    function renderManageTab() {
+      // Role checkboxes
+      const roleBox = document.getElementById('volRolesCheckboxes');
+      roleBox.innerHTML = ROLES.map(r => `
+        <label class="inline-flex items-center gap-1 px-2 py-1 rounded bg-zinc-950 border border-zinc-800 text-[11px] cursor-pointer">
+          <input type="checkbox" value="${r}" class="vol-role-cb accent-amber-500" />
+          <span>${r}</span>
+        </label>
+      `).join('');
+
+      // Volunteer list
+      document.getElementById('volCountBadge').textContent = state.volunteers.length;
+      const listContainer = document.getElementById('volunteerListContainer');
+      if (state.volunteers.length === 0) {
+        listContainer.innerHTML = `<div class="py-4 text-center text-xs text-zinc-500">尚未新增任何義工</div>`;
+      } else {
+        listContainer.innerHTML = state.volunteers.map(v => {
+          const srvNames = v.services.map(sid => SERVICES.find(s => s.id === sid)?.name).filter(Boolean).join('、');
+          const roleNames = v.roles && v.roles.length > 0 ? v.roles.join('、') : '全崗位皆可';
+          return `
+            <div class="py-2.5 flex items-center justify-between gap-2">
+              <div>
+                <div class="text-xs sm:text-sm font-bold text-white">${escapeHtml(v.name)}</div>
+                <div class="text-[11px] text-amber-400/90">${srvNames || '未勾選場次'}</div>
+                <div class="text-[10px] text-zinc-400">${roleNames}</div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button onclick="editVolunteer('${v.id}')" class="px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs text-zinc-200">編輯</button>
+                <button onclick="deleteVolunteer('${v.id}')" class="px-2.5 py-1 rounded bg-zinc-900 hover:bg-red-950 border border-zinc-700 text-xs text-red-400">刪除</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Service Leaders inputs
+      document.getElementById('leader_sat_night').value = state.serviceLeaders.sat_night || '';
+      document.getElementById('leader_sun_am').value = state.serviceLeaders.sun_am || '';
+      document.getElementById('leader_sun_pm').value = state.serviceLeaders.sun_pm || '';
+
+      // Deadline rules inputs
+      const dlContainer = document.getElementById('deadlineSettingsContainer');
+      dlContainer.innerHTML = SERVICES.map(srv => {
+        const r = state.deadlineRules[srv.id] || { enabled: true, monthOffset: -1, day: 20, hour: 23, minute: 59 };
+        let dayOpts = '';
+        for (let d = 1; d <= 31; d++) {
+          dayOpts += `<option value="${d}" ${Number(r.day) === d ? 'selected' : ''}>${d} 號</option>`;
+        }
+        let hourOpts = '';
+        for (let h = 0; h <= 23; h++) {
+          hourOpts += `<option value="${h}" ${Number(r.hour) === h ? 'selected' : ''}>${String(h).padStart(2, '0')} 時</option>`;
+        }
+        let minOpts = '';
+        [0, 15, 30, 45, 59].forEach(m => {
+          minOpts += `<option value="${m}" ${Number(r.minute) === m ? 'selected' : ''}>${String(m).padStart(2, '0')} 分</option>`;
+        });
+
+        return `
+          <div class="p-2.5 rounded-lg bg-zinc-950 border border-zinc-800 flex flex-wrap items-center justify-between gap-2">
+            <label class="inline-flex items-center gap-2 text-xs font-bold text-white">
+              <input type="checkbox" id="dl_en_${srv.id}" ${r.enabled ? 'checked' : ''} class="accent-amber-500" />
+              <span>${srv.name}</span>
+            </label>
+            <div class="flex flex-wrap items-center gap-1.5 text-xs">
+              <select id="dl_mo_${srv.id}" class="px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-200">
+                <option value="-1" ${Number(r.monthOffset) === -1 ? 'selected' : ''}>前一個月</option>
+                <option value="0" ${Number(r.monthOffset) === 0 ? 'selected' : ''}>當月</option>
+              </select>
+              <select id="dl_day_${srv.id}" class="px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-amber-300 font-bold">${dayOpts}</select>
+              <select id="dl_hr_${srv.id}" class="px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-200">${hourOpts}</select>
+              <select id="dl_min_${srv.id}" class="px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-200">${minOpts}</select>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Supabase config fields
+      const sbCfg = JSON.parse(localStorage.getItem(SB_CONFIG_KEY) || '{}');
+      document.getElementById('sbUrlInput').value = sbCfg.url || '';
+      document.getElementById('sbKeyInput').value = sbCfg.key || '';
+    }
+
+    function saveVolunteer() {
+      const name = document.getElementById('volNameInput').value.trim();
+      if (!name) {
+        showToast('請輸入義工姓名');
+        return;
+      }
+      const services = Array.from(document.querySelectorAll('.vol-service-cb:checked')).map(cb => cb.value);
+      if (services.length === 0) {
+        showToast('請至少勾選一個可服事場次');
+        return;
+      }
+      const roles = Array.from(document.querySelectorAll('.vol-role-cb:checked')).map(cb => cb.value);
+      const editId = document.getElementById('editVolId').value;
+
+      if (editId) {
+        const idx = state.volunteers.findIndex(v => v.id === editId);
+        if (idx >= 0) {
+          state.volunteers[idx] = { id: editId, name, services, roles };
+        }
+        showToast('已更新義工資料');
+      } else {
+        state.volunteers.push({
+          id: 'vol_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          name,
+          services,
+          roles
+        });
+        showToast('已新增義工：' + name);
+      }
+      resetVolunteerForm();
+      saveState();
+      renderAll();
+    }
+
+    function editVolunteer(id) {
+      const v = state.volunteers.find(x => x.id === id);
+      if (!v) return;
+      document.getElementById('volFormTitle').textContent = '編輯義工資料';
+      document.getElementById('cancelEditVolBtn').classList.remove('hidden');
+      document.getElementById('editVolId').value = v.id;
+      document.getElementById('volNameInput').value = v.name;
+      document.querySelectorAll('.vol-service-cb').forEach(cb => cb.checked = v.services.includes(cb.value));
+      document.querySelectorAll('.vol-role-cb').forEach(cb => cb.checked = (v.roles || []).includes(cb.value));
+    }
+
+    function resetVolunteerForm() {
+      document.getElementById('volFormTitle').textContent = '新增義工名單';
+      document.getElementById('cancelEditVolBtn').classList.add('hidden');
+      document.getElementById('editVolId').value = '';
+      document.getElementById('volNameInput').value = '';
+      document.querySelectorAll('.vol-service-cb').forEach(cb => cb.checked = false);
+      document.querySelectorAll('.vol-role-cb').forEach(cb => cb.checked = false);
+    }
+
+    function deleteVolunteer(id) {
+      state.volunteers = state.volunteers.filter(v => v.id !== id);
+      saveState();
+      renderAll();
+      showToast('已刪除該名義工');
+    }
+
+    function saveServiceLeaders() {
+      state.serviceLeaders.sat_night = document.getElementById('leader_sat_night').value.trim();
+      state.serviceLeaders.sun_am = document.getElementById('leader_sun_am').value.trim();
+      state.serviceLeaders.sun_pm = document.getElementById('leader_sun_pm').value.trim();
+      saveState();
+      renderScheduleTables();
+      showToast('已儲存各堂幹部標示');
+    }
+
+    function saveDeadlineRules() {
+      SERVICES.forEach(srv => {
+        state.deadlineRules[srv.id] = {
+          enabled: document.getElementById(`dl_en_${srv.id}`).checked,
+          monthOffset: Number(document.getElementById(`dl_mo_${srv.id}`).value),
+          day: Number(document.getElementById(`dl_day_${srv.id}`).value),
+          hour: Number(document.getElementById(`dl_hr_${srv.id}`).value),
+          minute: Number(document.getElementById(`dl_min_${srv.id}`).value)
+        };
+      });
+      saveState();
+      renderBlackoutTab();
+      showToast('已儲存各堂截止日設定');
+    }
+
+    function changeAdminPassword() {
+      const np = document.getElementById('newAdminPasswordInput').value.trim();
+      if (!np) {
+        showToast('請輸入新密碼');
+        return;
+      }
+      state.adminPassword = np;
+      document.getElementById('newAdminPasswordInput').value = '';
+      saveState();
+      showToast('管理者密碼已更新');
+    }
+
+    // Populate Volunteer Dropdowns
+    function syncVolunteerDropdowns() {
+      const selects = [
+        { id: 'supportVolunteerSelect', placeholder: '-- 選擇我的名字 --' },
+        { id: 'blackoutVolunteerSelect', placeholder: '-- 請選擇您的名字 --' },
+        { id: 'myScheduleSelect', placeholder: '-- 請選擇姓名 --' }
+      ];
+      selects.forEach(s => {
+        const el = document.getElementById(s.id);
+        const prev = el.value;
+        el.innerHTML = `<option value="">${s.placeholder}</option>` +
+          state.volunteers.map(v => `<option value="${v.id}">${escapeHtml(v.name)}</option>`).join('');
+        if (state.volunteers.some(v => v.id === prev)) {
+          el.value = prev;
+        }
+      });
+    }
+
+    function onSupportVolunteerChange() {
+      renderScheduleTables();
+    }
+
+    // Optional Supabase Sync
+    function initSupabaseFromStorage() {
+      try {
+        const cfg = JSON.parse(localStorage.getItem(SB_CONFIG_KEY) || '{}');
+        if (cfg.url && cfg.key && window.supabase) {
+          supabaseClient = window.supabase.createClient(cfg.url, cfg.key);
+          pullStateFromSupabase();
+          subscribeSupabaseRealtime();
+        }
+      } catch (e) {}
+    }
+
+    async function pullStateFromSupabase() {
+      if (!supabaseClient) return;
+      try {
+        const { data, error } = await supabaseClient
+          .from('blackteam_store')
+          .select('payload')
+          .eq('id', 'main')
+          .single();
+        if (!error && data && data.payload) {
+          state = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...data.payload };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          updateSyncBadge(true);
+          renderAll();
+        } else if (error && error.code === 'PGRST116') {
+          await pushStateToSupabase();
+          updateSyncBadge(true);
+        }
+      } catch (e) {}
+    }
+
+    async function pushStateToSupabase() {
+      if (!supabaseClient) return;
+      try {
+        await supabaseClient
+          .from('blackteam_store')
+          .upsert({ id: 'main', payload: state, updated_at: new Date().toISOString() });
+        updateSyncBadge(true);
+      } catch (e) {}
+    }
+
+    function subscribeSupabaseRealtime() {
+      if (!supabaseClient) return;
+      supabaseClient
+        .channel('blackteam-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'blackteam_store', filter: 'id=eq.main' }, payload => {
+          if (payload.new && payload.new.payload) {
+            state = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...payload.new.payload };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            renderAll();
+          }
+        })
+        .subscribe();
+    }
+
+    function updateSyncBadge(connected) {
+      const b = document.getElementById('syncBadge');
+      if (connected) {
+        b.textContent = '雲端同步中';
+        b.className = 'text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40';
+      } else {
+        b.textContent = '本機儲存';
+        b.className = 'text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700/70';
+      }
+    }
+
+    function saveSupabaseConfig() {
+      const url = document.getElementById('sbUrlInput').value.trim();
+      const key = document.getElementById('sbKeyInput').value.trim();
+      if (!url || !key) {
+        showToast('請填寫完整的 URL 與 Anon Key');
+        return;
+      }
+      localStorage.setItem(SB_CONFIG_KEY, JSON.stringify({ url, key }));
+      initSupabaseFromStorage();
+      showToast('已嘗試連線雲端資料庫');
+    }
+
+    function disconnectSupabase() {
+      localStorage.removeItem(SB_CONFIG_KEY);
+      supabaseClient = null;
+      updateSyncBadge(false);
+      showToast('已中斷雲端連線，改為本機儲存');
+    }
+
+    function copySupabaseSql() {
+      const sql = `create table if not exists blackteam_store (\n  id text primary key,\n  payload jsonb not null,\n  updated_at timestamptz default now()\n);\nalter table blackteam_store enable row level security;\ncreate policy "Public access" on blackteam_store for all using (true) with check (true);`;
+      navigator.clipboard.writeText(sql).then(() => showToast('已複製 SQL 建表指令'));
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function renderAll() {
+      document.getElementById('currentMonthLabel').textContent = `${currentYear}年 ${currentMonth}月`;
+      syncVolunteerDropdowns();
+      renderRules();
+      renderScheduleTables();
+      renderBlackoutTab();
+      renderMySchedule();
+      renderManageTab();
+    }
+
+    // Boot
+    updateAdminUI();
+    renderAll();
+    initSupabaseFromStorage();
+  </script>
+</body>
+</html>
