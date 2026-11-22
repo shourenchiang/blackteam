@@ -89,11 +89,6 @@
       </div>
 
       <div class="flex items-center gap-1.5 shrink-0">
-        <button onclick="switchTab('my_schedule')" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-xs font-semibold text-amber-400 flex items-center gap-1 whitespace-nowrap shrink-0 transition">
-          <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-          <span>與我有關</span>
-        </button>
-
         <button id="adminLoginBtn" onclick="openAdminModal()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-xs font-semibold text-zinc-300 flex items-center gap-1 whitespace-nowrap shrink-0 transition">
           <svg class="w-3.5 h-3.5 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
           <span id="adminBtnText">管理者登入</span>
@@ -135,6 +130,10 @@
           <button onclick="exportScheduleImage('current')" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-200 flex items-center gap-1 whitespace-nowrap">
             <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             <span>截圖目前場次</span>
+          </button>
+          <button onclick="openBatchImportModal()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-amber-500/40 text-xs font-semibold text-amber-300 flex items-center gap-1 whitespace-nowrap">
+            <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span>批次匯入(3個月)</span>
           </button>
           <button onclick="openLineReminderModal()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-200 flex items-center gap-1 whitespace-nowrap">
             <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
@@ -317,6 +316,45 @@
           <div id="volunteerListContainer" class="divide-y divide-zinc-800/80"></div>
         </section>
 
+        <!-- Service Time Settings (Used for Calendar Export) -->
+        <section class="bg-[#121215] border border-zinc-800 rounded-xl p-3.5 space-y-3">
+          <div>
+            <h3 class="text-sm font-extrabold text-amber-400">各堂聚會時間設定（義工匯入行事曆用）</h3>
+            <p class="text-[11px] text-zinc-400 mt-0.5">設定三場聚會的起訖時間，義工在「與我有關」一鍵加入 Apple / Google 行事曆時會自動帶入。</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+            <div class="p-2.5 rounded-lg bg-zinc-950 border border-zinc-800 space-y-1.5">
+              <div class="font-bold text-purple-300">週六晚堂</div>
+              <div class="flex items-center gap-1.5">
+                <input type="time" id="time_start_sat_night" class="px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-100" />
+                <span class="text-zinc-500">~</span>
+                <input type="time" id="time_end_sat_night" class="px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-100" />
+              </div>
+            </div>
+            <div class="p-2.5 rounded-lg bg-zinc-950 border border-zinc-800 space-y-1.5">
+              <div class="font-bold text-amber-300">週日上午堂</div>
+              <div class="flex items-center gap-1.5">
+                <input type="time" id="time_start_sun_am" class="px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-100" />
+                <span class="text-zinc-500">~</span>
+                <input type="time" id="time_end_sun_am" class="px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-100" />
+              </div>
+            </div>
+            <div class="p-2.5 rounded-lg bg-zinc-950 border border-zinc-800 space-y-1.5">
+              <div class="font-bold text-sky-300">週日下午堂</div>
+              <div class="flex items-center gap-1.5">
+                <input type="time" id="time_start_sun_pm" class="px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-100" />
+                <span class="text-zinc-500">~</span>
+                <input type="time" id="time_end_sun_pm" class="px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-100" />
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-end">
+            <button onclick="saveServiceTimes()" class="px-3.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-400 text-xs font-bold border border-zinc-700">
+              儲存聚會時間
+            </button>
+          </div>
+        </section>
+
         <!-- Service Leaders (Cover / 組長 / 副手) Settings -->
         <section class="bg-[#121215] border border-zinc-800 rounded-xl p-3.5 space-y-3">
           <h3 class="text-sm font-extrabold text-amber-400">各堂團隊幹部標示（Cover / 組長 / 副手）</h3>
@@ -459,6 +497,79 @@
     </div>
   </div>
 
+  <!-- Batch 3-Month Import Modal (Speakers & Worship Songs with YouTube Links) -->
+  <div id="batchImportModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[#121215] border border-zinc-700 rounded-2xl max-w-2xl w-full p-4 sm:p-5 space-y-3 shadow-2xl max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between shrink-0">
+        <div>
+          <h3 class="text-base font-extrabold text-amber-400">批次匯入三個月資訊（講員 / 歌單與連結）</h3>
+          <p class="text-[11px] text-zinc-400 mt-0.5">一次貼上三個月的週次、講員與敬拜歌單（含 YouTube 連結），系統會自動對應每週三場並更新。</p>
+        </div>
+        <button onclick="closeBatchImportModal()" class="text-zinc-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <span class="text-[11px] text-zinc-400">支援格式：<code class="text-amber-300">12/6 講員：XXX</code> + 歌名與 YouTube 網址（若某堂講員不同可寫 <code class="text-zinc-200">週六講員：AAA</code>）</span>
+        <button type="button" onclick="fillBatchImportSample()" class="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-[11px] font-semibold text-amber-300">
+          填入範例格式
+        </button>
+      </div>
+
+      <textarea id="batchImportTextarea" oninput="previewBatchImport()" rows="8"
+        placeholder="請在此貼上三個月的講員與歌單資訊，例如：&#10;&#10;12/6 講員：張牧師&#10;歌單：&#10;1. 恩典之路 https://www.youtube.com/watch?v=xxxxx&#10;2. 滿有能力 https://youtu.be/yyyyy&#10;&#10;12/13 講員：李傳道&#10;歌單：&#10;奇異恩典 https://youtu.be/zzzzz"
+        class="w-full rounded-xl bg-zinc-950 border border-zinc-700 p-3 text-xs text-zinc-100 leading-relaxed focus:outline-none focus:border-amber-500 shrink-0"></textarea>
+
+      <!-- Live Parsed Preview -->
+      <div class="flex-1 overflow-y-auto space-y-1.5 border border-zinc-800 rounded-xl p-2.5 bg-zinc-950/70">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold text-zinc-300">解析預覽（確認無誤後按下方套用）：</span>
+          <span id="batchPreviewCount" class="text-[11px] font-bold text-amber-400">尚未偵測到日期</span>
+        </div>
+        <div id="batchPreviewList" class="space-y-1.5 text-xs text-zinc-400">
+          <div class="py-3 text-center text-[11px] text-zinc-600">貼上文字後將自動顯示解析結果</div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 shrink-0 pt-1">
+        <button onclick="closeBatchImportModal()" class="px-4 py-2 rounded-xl bg-zinc-800 text-xs font-semibold text-zinc-300">取消</button>
+        <button onclick="applyBatchImport()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-extrabold shadow">
+          確認套用更新
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screenshot Image Preview & Save to Photo Album Modal -->
+  <div id="imagePreviewModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-[#121215] border border-zinc-700 rounded-2xl max-w-2xl w-full p-4 space-y-3 shadow-2xl max-h-[92vh] flex flex-col">
+      <div class="flex items-center justify-between shrink-0">
+        <h3 id="imagePreviewTitle" class="text-sm sm:text-base font-extrabold text-amber-400">服事表截圖預覽</h3>
+        <button onclick="closeImagePreviewModal()" class="text-zinc-400 hover:text-white text-lg px-1">✕</button>
+      </div>
+
+      <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/40 text-xs text-amber-200 leading-relaxed shrink-0">
+        <span class="font-extrabold text-amber-400">📱 直接存入手機相簿方式：</span>
+        <span class="font-semibold">長按下方圖片</span> → 點選「<span class="underline">加入照片</span>」或「<span class="underline">儲存圖片</span>」，即可直接存到手機相簿（不會存進檔案夾）；或按下方按鈕直接分享至 LINE。
+      </div>
+
+      <div class="flex-1 overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-950 p-2 flex items-start justify-center">
+        <img id="exportedPreviewImg" src="" alt="BLACK TEAM 服事表截圖" class="w-full h-auto rounded-lg shadow-lg select-auto" />
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 shrink-0 pt-1">
+        <button type="button" onclick="shareExportedImageToAlbum()" id="shareToAlbumBtn"
+          class="flex-1 py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 shadow transition">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          <span>存到相簿 / 分享傳送</span>
+        </button>
+        <button type="button" onclick="downloadExportedImageFallback()"
+          class="py-2.5 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold border border-zinc-700 whitespace-nowrap">
+          下載圖檔
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification -->
   <div id="toast" class="hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-zinc-900 border border-amber-500/60 text-xs font-bold text-amber-300 shadow-2xl whitespace-nowrap"></div>
 
@@ -482,6 +593,16 @@
       'PPR'
     ];
 
+    const SERVICE_ROLES = {
+      sat_night: ROLES,
+      sun_am: ROLES,
+      sun_pm: ['控場', '導播', 'CAM2', '靜態攝影', 'PPR']
+    };
+
+    function getRolesForService(serviceId) {
+      return SERVICE_ROLES[serviceId] || ROLES;
+    }
+
     const SERVICES = [
       { id: 'sat_night', name: '週六晚堂', badgeClass: 'bg-purple-950/90 text-purple-300 border-purple-700/60' },
       { id: 'sun_am', name: '週日上午堂', badgeClass: 'bg-amber-950/90 text-amber-300 border-amber-700/60' },
@@ -495,6 +616,11 @@
         sat_night: '團隊Cover：守仁 / 組長：洛克 / 副手：羽宸',
         sun_am: '團隊Cover：守仁 / 組長：依寧 / 副手：藝菲、丸子',
         sun_pm: ''
+      },
+      serviceTimes: {
+        sat_night: { start: '19:00', end: '21:00' },
+        sun_am: { start: '10:00', end: '12:00' },
+        sun_pm: { start: '14:00', end: '16:00' }
       },
       deadlineRules: {
         sat_night: { enabled: true, monthOffset: -1, day: 30, hour: 23, minute: 59 },
@@ -528,6 +654,7 @@
           ...JSON.parse(JSON.stringify(DEFAULT_STATE)),
           ...parsed,
           serviceLeaders: { ...DEFAULT_STATE.serviceLeaders, ...(parsed.serviceLeaders || {}) },
+          serviceTimes: { ...DEFAULT_STATE.serviceTimes, ...(parsed.serviceTimes || {}) },
           deadlineRules: { ...DEFAULT_STATE.deadlineRules, ...(parsed.deadlineRules || {}) }
         };
       } catch (e) {
@@ -554,16 +681,28 @@
       return `${y}-${String(m).padStart(2, '0')}`;
     }
 
-    function getWeekendSongKey(serviceId, isoDate) {
+    function getWeekendSlotKeys(serviceId, isoDate) {
       const [y, m, d] = isoDate.split('-').map(Number);
-      const dt = new Date(y, m - 1, d);
+      const sat = new Date(y, m - 1, d);
+      const sun = new Date(y, m - 1, d);
       if (serviceId === 'sat_night') {
-        dt.setDate(dt.getDate() + 1); // Pair Saturday night with that weekend's Sunday
+        sun.setDate(sun.getDate() + 1);
+      } else {
+        sat.setDate(sat.getDate() - 1);
       }
-      const wy = dt.getFullYear();
-      const wm = String(dt.getMonth() + 1).padStart(2, '0');
-      const wd = String(dt.getDate()).padStart(2, '0');
-      return `weekend_${wy}-${wm}-${wd}`;
+      const satIso = `${sat.getFullYear()}-${String(sat.getMonth() + 1).padStart(2, '0')}-${String(sat.getDate()).padStart(2, '0')}`;
+      const sunIso = `${sun.getFullYear()}-${String(sun.getMonth() + 1).padStart(2, '0')}-${String(sun.getDate()).padStart(2, '0')}`;
+      return {
+        satKey: `sat_night_${satIso}`,
+        sunAmKey: `sun_am_${sunIso}`,
+        sunPmKey: `sun_pm_${sunIso}`,
+        allKeys: [`sat_night_${satIso}`, `sun_am_${sunIso}`, `sun_pm_${sunIso}`],
+        weekendKey: `weekend_${sunIso}`
+      };
+    }
+
+    function getWeekendSongKey(serviceId, isoDate) {
+      return getWeekendSlotKeys(serviceId, isoDate).weekendKey;
     }
 
     function getWeekendLabel(serviceId, isoDate) {
@@ -658,8 +797,51 @@
     }
 
     // One-Click Schedule Image Export (Admin Only)
-    // scopeMode === 'all' -> Print-friendly White background + Black & Yellow/Amber text
-    // scopeMode === 'current' -> Studio Dark background for mobile screenshot
+    // Renders image and opens preview modal so mobile users can save directly to Photo Album (never Files)
+    window._lastExportedDataUrl = '';
+    window._lastExportedFilename = 'BLACK_TEAM_服事表.png';
+
+    function closeImagePreviewModal() {
+      document.getElementById('imagePreviewModal').classList.add('hidden');
+    }
+
+    async function shareExportedImageToAlbum() {
+      const dataUrl = window._lastExportedDataUrl;
+      const filename = window._lastExportedFilename || 'BLACK_TEAM_服事表.png';
+      if (!dataUrl) return;
+
+      try {
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], filename, { type: 'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: filename.replace('.png', '')
+          });
+          showToast('已開啟系統選單，可選「儲存影像」存入相簿！');
+          return;
+        }
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;
+      }
+      showToast('請直接「長按上方圖片」→ 點選「加入照片 / 儲存圖片」存入相簿！');
+    }
+
+    function downloadExportedImageFallback() {
+      const dataUrl = window._lastExportedDataUrl;
+      const filename = window._lastExportedFilename || 'BLACK_TEAM_服事表.png';
+      if (!dataUrl) return;
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('已下載圖片檔');
+    }
+
     async function exportScheduleImage(scopeMode) {
       if (typeof html2canvas === 'undefined') {
         showToast('截圖元件載入中，請稍候再試');
@@ -677,19 +859,19 @@
       const theme = isPrintLight ? {
         pageBg: '#FFFFFF',
         cardBg: '#FFFFFF',
-        headerBg: '#FEF3C7',      // Soft warm yellow tint
-        subHeaderBg: '#F4F4F5',   // Light neutral gray
+        headerBg: '#FEF3C7',
+        subHeaderBg: '#F4F4F5',
         roleColBg: '#FAFAFA',
         border: '#D4D4D8',
-        titleMain: '#111827',     // Deep black
-        titleAccent: '#D97706',   // Rich yellow-amber
+        titleMain: '#111827',
+        titleAccent: '#D97706',
         subText: '#374151',
         mutedText: '#6B7280',
-        serviceBadgeBg: '#FACC15',// Bright yellow highlight
+        serviceBadgeBg: '#FACC15',
         serviceBadgeText: '#111827',
         speakerBg: '#FFFBEB',
-        speakerText: '#B45309',   // Deep amber-yellow
-        cellText: '#111827',      // Crisp black
+        speakerText: '#B45309',
+        cellText: '#111827',
         emptyText: '#9CA3AF',
         supportBg: '#FEE2E2',
         supportText: '#991B1B'
@@ -714,10 +896,13 @@
         supportText: '#FECACA'
       };
 
+      // Place inside viewport behind page content so iOS Safari / mobile WebView paints reliably
       const wrapper = document.createElement('div');
-      wrapper.style.position = 'fixed';
-      wrapper.style.left = '-9999px';
-      wrapper.style.top = '0';
+      wrapper.style.position = 'absolute';
+      wrapper.style.left = '0';
+      wrapper.style.top = `${window.scrollY}px`;
+      wrapper.style.zIndex = '-1';
+      wrapper.style.pointerEvents = 'none';
       wrapper.style.width = '820px';
       wrapper.style.backgroundColor = theme.pageBg;
       wrapper.style.color = theme.cellText;
@@ -754,7 +939,7 @@
           return `<td style="padding:5px 6px;text-align:center;border:1px solid ${theme.border};background:${theme.speakerBg};color:${theme.speakerText};font-size:12px;font-weight:800;">${escapeHtml(spk)}</td>`;
         }).join('');
 
-        const bodyRows = ROLES.map(role => {
+        const bodyRows = getRolesForService(srv.id).map(role => {
           const tds = dates.map(d => {
             const entry = (monthSched[`${srv.id}_${d.iso}`] || {})[role];
             const vol = entry ? state.volunteers.find(v => v.id === entry.volId) : null;
@@ -809,22 +994,34 @@
       wrapper.innerHTML = innerHtml;
       document.body.appendChild(wrapper);
 
+      // Give browser a frame to lay out the offscreen DOM before capturing
+      await new Promise(r => requestAnimationFrame(() => setTimeout(r, 60)));
+
       try {
         const canvas = await html2canvas(wrapper, {
           backgroundColor: theme.pageBg,
           scale: 2,
-          useCORS: true
+          useCORS: true,
+          scrollX: 0,
+          scrollY: -window.scrollY
         });
-        const link = document.createElement('a');
+        const dataUrl = canvas.toDataURL('image/png');
         const fileScope = targetFilter === 'all' ? '三場總表(列印版)' : titleScope;
-        link.download = `BLACK_TEAM_${currentYear}年${currentMonth}月_${fileScope}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-        showToast(isPrintLight ? '已下載白底列印版三場總表！' : '已下載黑底場次截圖！');
+        const filename = `BLACK_TEAM_${currentYear}年${currentMonth}月_${fileScope}.png`;
+
+        window._lastExportedDataUrl = dataUrl;
+        window._lastExportedFilename = filename;
+
+        document.getElementById('imagePreviewTitle').textContent = `${currentYear}年${currentMonth}月 · ${fileScope}`;
+        document.getElementById('exportedPreviewImg').src = dataUrl;
+        document.getElementById('imagePreviewModal').classList.remove('hidden');
       } catch (err) {
+        console.error(err);
         showToast('截圖產生失敗，請稍後再試');
       } finally {
-        document.body.removeChild(wrapper);
+        if (wrapper.parentNode) {
+          document.body.removeChild(wrapper);
+        }
       }
     }
 
@@ -954,9 +1151,15 @@
           if (isAdmin && !isScMode) {
             return `
               <td class="px-1 py-1.5 border-l border-zinc-800/80 bg-zinc-950/60">
-                <input type="text" value="${escapeHtml(spk)}" placeholder="講員"
-                  onchange="updateSpeaker('${slotKey}', this.value)"
-                  class="w-full px-1.5 py-1 rounded bg-zinc-900 border border-zinc-800 text-[11px] text-center text-amber-300 font-semibold focus:outline-none focus:border-amber-500" />
+                <div class="flex items-center gap-0.5">
+                  <input type="text" value="${escapeHtml(spk)}" placeholder="講員"
+                    onchange="updateSpeaker('${slotKey}', this.value)"
+                    class="w-full px-1 py-1 rounded bg-zinc-900 border border-zinc-800 text-[11px] text-center text-amber-300 font-semibold focus:outline-none focus:border-amber-500" />
+                  <button type="button" onclick="syncSpeakerToWeekend('${slotKey}')" title="將此講員同步至本週三場"
+                    class="px-1 py-1 rounded bg-zinc-900 hover:bg-amber-500/20 border border-zinc-800 text-[9px] text-zinc-400 hover:text-amber-300 shrink-0">
+                    同步
+                  </button>
+                </div>
               </td>
             `;
           }
@@ -967,8 +1170,9 @@
           `;
         }).join('');
 
-        // Role rows
-        const roleRows = ROLES.map(role => {
+        // Role rows (Service-specific roles)
+        const srvRoles = getRolesForService(srv.id);
+        const roleRows = srvRoles.map(role => {
           const cells = dates.map(d => {
             const slotKey = `${srv.id}_${d.iso}`;
             const dayAssign = monthSched[slotKey] || {};
@@ -1156,9 +1360,47 @@
 
     // Schedule Actions
     function updateSpeaker(slotKey, val) {
-      state.speakers[slotKey] = val.trim();
+      const trimmed = val.trim();
+      const prevVal = (state.speakers[slotKey] || '').trim();
+      state.speakers[slotKey] = trimmed;
+
+      // Auto-sync across the 3 services of that weekend if the other services were empty or previously matched this speaker
+      const idx = slotKey.lastIndexOf('_');
+      if (idx > 0) {
+        const srvId = slotKey.slice(0, idx);
+        const isoDate = slotKey.slice(idx + 1);
+        const { allKeys } = getWeekendSlotKeys(srvId, isoDate);
+        let syncedCount = 0;
+        allKeys.forEach(k => {
+          if (k === slotKey) return;
+          const existing = (state.speakers[k] || '').trim();
+          if (!existing || (prevVal && existing === prevVal)) {
+            state.speakers[k] = trimmed;
+            syncedCount++;
+          }
+        });
+        saveState();
+        renderScheduleTables();
+        showToast(syncedCount > 0 ? '已更新並同步本週三場講員' : '已更新本場講員');
+        return;
+      }
       saveState();
       showToast('已更新講員');
+    }
+
+    function syncSpeakerToWeekend(slotKey) {
+      const val = (state.speakers[slotKey] || '').trim();
+      const idx = slotKey.lastIndexOf('_');
+      if (idx <= 0) return;
+      const srvId = slotKey.slice(0, idx);
+      const isoDate = slotKey.slice(idx + 1);
+      const { allKeys } = getWeekendSlotKeys(srvId, isoDate);
+      allKeys.forEach(k => {
+        state.speakers[k] = val;
+      });
+      saveState();
+      renderScheduleTables();
+      showToast(val ? `已將「${val}」同步至本週三場` : '已同步清空本週三場講員');
     }
 
     function assignSlot(slotKey, role, volId) {
@@ -1223,7 +1465,7 @@
           const blackedIds = monthBlackout[slotKey] || [];
           const usedInSameService = new Set(Object.values(dayAssign).filter(Boolean).map(e => e.volId));
 
-          ROLES.forEach(role => {
+          getRolesForService(srv.id).forEach(role => {
             if (dayAssign[role] && dayAssign[role].volId) return; // keep existing manual/support assignments
 
             const candidates = state.volunteers.filter(v =>
@@ -1401,7 +1643,7 @@
         const assignedLines = [];
         const vacantRoles = [];
 
-        ROLES.forEach(role => {
+        getRolesForService(srv.id).forEach(role => {
           const entry = dayAssign[role];
           const v = (entry && entry.volId) ? state.volunteers.find(x => x.id === entry.volId) : null;
           if (v) {
@@ -1595,6 +1837,7 @@
               items.push({
                 dateLabel: `${d.label} (週${d.dayName})`,
                 iso: d.iso,
+                serviceId: srv.id,
                 serviceName: srv.name,
                 role,
                 isSupport: entry.isSupport,
@@ -1612,20 +1855,46 @@
         return;
       }
 
+      window._currentMyScheduleItems = items;
+      window._currentMyScheduleVolName = state.volunteers.find(v => v.id === volId)?.name || '';
+
       container.innerHTML = `
-        <div class="text-xs font-bold text-zinc-300 mb-2">本月共 <span class="text-amber-400 text-sm">${items.length}</span> 場服事：</div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          ${items.map(it => `
-            <div class="p-3 rounded-xl border ${it.isSupport ? 'bg-red-950/30 border-red-800/80' : 'bg-zinc-950 border-zinc-800'} flex items-center justify-between">
-              <div>
-                <div class="text-xs sm:text-sm font-extrabold text-white">${it.dateLabel} · ${it.serviceName}</div>
-                ${it.speaker ? `<div class="text-[11px] text-zinc-400 mt-0.5">講員：${escapeHtml(it.speaker)}</div>` : ''}
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5 p-2.5 rounded-xl bg-zinc-950 border border-zinc-800">
+          <div class="text-xs font-bold text-zinc-300">
+            本月共 <span class="text-amber-400 text-sm">${items.length}</span> 場服事
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button onclick="downloadAllMyCalendarICS()" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-xs font-extrabold flex items-center gap-1 shadow transition">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              <span>一鍵匯入全部至手機行事曆 (Apple / Google)</span>
+            </button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          ${items.map((it, idx) => {
+            const gcalUrl = buildGoogleCalendarUrl(it);
+            return `
+              <div class="p-3 rounded-xl border ${it.isSupport ? 'bg-red-950/30 border-red-800/80' : 'bg-zinc-950 border-zinc-800'} space-y-2.5">
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <div class="text-xs sm:text-sm font-extrabold text-white">${it.dateLabel} · ${it.serviceName}</div>
+                    ${it.speaker ? `<div class="text-[11px] text-zinc-400 mt-0.5">講員：${escapeHtml(it.speaker)}</div>` : ''}
+                  </div>
+                  <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold shrink-0 ${it.isSupport ? 'bg-red-950 text-red-200 border border-red-700' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}">
+                    ${it.role}${it.isSupport ? ' (支援)' : ''}
+                  </span>
+                </div>
+                <div class="flex items-center gap-1.5 pt-1 border-t border-zinc-800/80">
+                  <button onclick="downloadSingleCalendarICS(${idx})" class="flex-1 py-1.5 px-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-[11px] font-bold text-zinc-200 flex items-center justify-center gap-1 transition">
+                    <span>🍎 Apple 行事曆</span>
+                  </button>
+                  <a href="${gcalUrl}" target="_blank" rel="noopener noreferrer" class="flex-1 py-1.5 px-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-[11px] font-bold text-amber-300 flex items-center justify-center gap-1 transition">
+                    <span>📅 Google 行事曆</span>
+                  </a>
+                </div>
               </div>
-              <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold ${it.isSupport ? 'bg-red-950 text-red-200 border border-red-700' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}">
-                ${it.role}${it.isSupport ? ' (支援)' : ''}
-              </span>
-            </div>
-          `).join('')}
+            `;
+          }).join('')}
         </div>
       `;
     }
@@ -1665,6 +1934,15 @@
           `;
         }).join('');
       }
+
+      // Service Times inputs
+      const times = state.serviceTimes || DEFAULT_STATE.serviceTimes;
+      ['sat_night', 'sun_am', 'sun_pm'].forEach(sid => {
+        const sEl = document.getElementById(`time_start_${sid}`);
+        const eEl = document.getElementById(`time_end_${sid}`);
+        if (sEl && times[sid]) sEl.value = times[sid].start || '10:00';
+        if (eEl && times[sid]) eEl.value = times[sid].end || '12:00';
+      });
 
       // Service Leaders inputs
       document.getElementById('leader_sat_night').value = state.serviceLeaders.sat_night || '';
@@ -1778,6 +2056,17 @@
       showToast('已刪除該名義工');
     }
 
+    function saveServiceTimes() {
+      ['sat_night', 'sun_am', 'sun_pm'].forEach(sid => {
+        state.serviceTimes[sid] = {
+          start: document.getElementById(`time_start_${sid}`).value || '10:00',
+          end: document.getElementById(`time_end_${sid}`).value || '12:00'
+        };
+      });
+      saveState();
+      showToast('已儲存各堂聚會時間');
+    }
+
     function saveServiceLeaders() {
       state.serviceLeaders.sat_night = document.getElementById('leader_sat_night').value.trim();
       state.serviceLeaders.sun_am = document.getElementById('leader_sun_am').value.trim();
@@ -1785,6 +2074,323 @@
       saveState();
       renderScheduleTables();
       showToast('已儲存各堂幹部標示');
+    }
+
+    // Calendar Export Helpers (Apple .ics & Google Calendar)
+    function getServiceTimeWindow(item) {
+      const tCfg = (state.serviceTimes && state.serviceTimes[item.serviceId]) || { start: '10:00', end: '12:00' };
+      const ymd = item.iso.replace(/-/g, '');
+      const startHM = (tCfg.start || '10:00').replace(':', '') + '00';
+      const endHM = (tCfg.end || '12:00').replace(':', '') + '00';
+      return {
+        startLocal: `${ymd}T${startHM}`,
+        endLocal: `${ymd}T${endHM}`,
+        startTimeStr: tCfg.start || '10:00',
+        endTimeStr: tCfg.end || '12:00'
+      };
+    }
+
+    function buildGoogleCalendarUrl(item) {
+      const { startLocal, endLocal } = getServiceTimeWindow(item);
+      const title = encodeURIComponent(`[BLACK TEAM] ${item.serviceName} - ${item.role}${item.isSupport ? '(支援)' : ''}`);
+      const detailsParts = [
+        `團隊：BLACK TEAM 影視團隊`,
+        `場次：${item.serviceName}`,
+        `崗位：${item.role}${item.isSupport ? ' (支援)' : ''}`
+      ];
+      if (item.speaker) detailsParts.push(`講員：${item.speaker}`);
+      detailsParts.push('提醒：請於聚會前 40 分鐘準時抵達試機。');
+      const details = encodeURIComponent(detailsParts.join('\n'));
+      return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startLocal}/${endLocal}&ctz=Asia/Taipei&details=${details}`;
+    }
+
+    function generateICSContent(itemsList, volName) {
+      const nowStamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      const lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//BLACK TEAM//Schedule Calendar//ZH',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'X-WR-CALNAME:BLACK TEAM 服事表',
+        'X-WR-TIMEZONE:Asia/Taipei'
+      ];
+
+      itemsList.forEach((item, i) => {
+        const { startLocal, endLocal } = getServiceTimeWindow(item);
+        const summary = `[BLACK TEAM] ${item.serviceName} - ${item.role}${item.isSupport ? '(支援)' : ''}`;
+        const desc = [
+          `同工：${volName}`,
+          `場次：${item.serviceName}`,
+          `崗位：${item.role}${item.isSupport ? ' (支援)' : ''}`,
+          item.speaker ? `講員：${item.speaker}` : '',
+          '提醒：聚會前 40 分鐘準時抵達導播室／舞台就位試機。'
+        ].filter(Boolean).join('\\n');
+
+        lines.push(
+          'BEGIN:VEVENT',
+          `UID:blackteam-${item.iso}-${item.serviceId}-${i}@blackteam.schedule`,
+          `DTSTAMP:${nowStamp}`,
+          `DTSTART;TZID=Asia/Taipei:${startLocal}`,
+          `DTEND;TZID=Asia/Taipei:${endLocal}`,
+          `SUMMARY:${summary}`,
+          `DESCRIPTION:${desc}`,
+          'BEGIN:VALARM',
+          'TRIGGER:-PT60M',
+          'ACTION:DISPLAY',
+          `DESCRIPTION:BLACK TEAM 服事提醒：${summary}`,
+          'END:VALARM',
+          'END:VEVENT'
+        );
+      });
+
+      lines.push('END:VCALENDAR');
+      return lines.join('\r\n');
+    }
+
+    function triggerICSDownload(icsText, filename) {
+      const blob = new Blob([icsText], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function downloadAllMyCalendarICS() {
+      const items = window._currentMyScheduleItems || [];
+      const volName = window._currentMyScheduleVolName || '義工';
+      if (items.length === 0) return;
+      const ics = generateICSContent(items, volName);
+      triggerICSDownload(ics, `BLACK_TEAM_${currentYear}年${currentMonth}月_${volName}.ics`);
+      showToast('已產生行事曆檔，請點選「加入全部」匯入手機行事曆！');
+    }
+
+    function downloadSingleCalendarICS(idx) {
+      const items = window._currentMyScheduleItems || [];
+      const volName = window._currentMyScheduleVolName || '義工';
+      const item = items[idx];
+      if (!item) return;
+      const ics = generateICSContent([item], volName);
+      triggerICSDownload(ics, `BLACK_TEAM_${item.iso}_${item.serviceName}.ics`);
+      showToast('已下載單場 Apple 行事曆檔！');
+    }
+
+    // Batch 3-Month Import Parser & Modal Controls
+    let parsedBatchEntries = [];
+
+    function openBatchImportModal() {
+      document.getElementById('batchImportModal').classList.remove('hidden');
+      previewBatchImport();
+    }
+
+    function closeBatchImportModal() {
+      document.getElementById('batchImportModal').classList.add('hidden');
+    }
+
+    function fillBatchImportSample() {
+      const sample = [
+        '12/6 講員：張牧師',
+        '歌單：',
+        '1. 恩典之路 https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        '2. 滿有能力 https://youtu.be/example2',
+        '',
+        '12/13',
+        '週六講員：李傳道 / 週日講員：王牧師',
+        '歌單：',
+        '1. 奇異恩典 https://youtu.be/example3',
+        '2. 榮耀歸於真神 https://youtu.be/example4',
+        '',
+        '1/3 講員：陳牧師',
+        '歌單：',
+        '1. 新的事將要成就 https://youtu.be/example5'
+      ].join('\n');
+      document.getElementById('batchImportTextarea').value = sample;
+      previewBatchImport();
+    }
+
+    function resolveSmartYear(monthNum, explicitYear) {
+      if (explicitYear) return Number(explicitYear);
+      // If currently viewing late year (e.g. Oct-Dec) and pasted month is Jan-Apr, assume next year
+      if (currentMonth >= 9 && monthNum <= 4) {
+        return currentYear + 1;
+      }
+      return currentYear;
+    }
+
+    function parseBatchImportText(rawText) {
+      const lines = rawText.split('\n');
+      const blocks = [];
+      let currentBlock = null;
+
+      // Match a date header line like "12/6", "2026/12/6", "12/06 講員：XXX", "12月6日 講員：XXX"
+      const dateHeaderRegex = /^(?:【)?(?:(\d{4})[\/\-年])?(\d{1,2})[\/\-月](\d{1,2})日?(?:\([六日]\))?(?:】)?(.*)$/;
+
+      lines.forEach(rawLine => {
+        const line = rawLine.trim();
+        if (!line) return;
+
+        const m = line.match(dateHeaderRegex);
+        // Ensure it's not a numbered song like "1. 恩典之路" (which has a dot, not / or - or 月)
+        if (m && !/^\d+\./.test(line)) {
+          if (currentBlock) blocks.push(currentBlock);
+          const expYear = m[1] ? Number(m[1]) : null;
+          const month = Number(m[2]);
+          const day = Number(m[3]);
+          const year = resolveSmartYear(month, expYear);
+          const dt = new Date(year, month - 1, day);
+          const dow = dt.getDay(); // 6 = Sat, 0 = Sun
+          const srvId = dow === 6 ? 'sat_night' : 'sun_am';
+          const iso = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const keys = getWeekendSlotKeys(srvId, iso);
+
+          currentBlock = {
+            displayDate: `${year}/${month}/${day}`,
+            keys,
+            speakers: { sat_night: null, sun_am: null, sun_pm: null },
+            songs: []
+          };
+
+          const rest = (m[4] || '').trim();
+          if (rest) {
+            extractSpeakersFromLine(rest, currentBlock);
+          }
+          return;
+        }
+
+        if (!currentBlock) return;
+
+        // Check if line specifies speakers
+        if (/講員/.test(line)) {
+          extractSpeakersFromLine(line, currentBlock);
+          return;
+        }
+
+        // Ignore pure "歌單：" label line
+        if (/^歌單[:：]?$/.test(line)) {
+          return;
+        }
+
+        // Check if line is ONLY a URL (attach to previous song if missing URL)
+        if (/^https?:\/\/\S+$/i.test(line)) {
+          if (currentBlock.songs.length > 0 && !currentBlock.songs[currentBlock.songs.length - 1].url) {
+            currentBlock.songs[currentBlock.songs.length - 1].url = line;
+          }
+          return;
+        }
+
+        // Otherwise parse as a song line (strip "歌單：" prefix if inline)
+        let songLine = line.replace(/^歌單[:：]\s*/, '');
+        const urlMatch = songLine.match(/(https?:\/\/\S+)/i);
+        const url = urlMatch ? urlMatch[1] : '';
+        let title = url ? songLine.replace(url, '') : songLine;
+        title = title.replace(/^[\d]+[\.、\)\s]+/, '').replace(/^[•\-\*]\s*/, '').replace(/[|｜\s]+$/, '').trim();
+        if (title) {
+          currentBlock.songs.push({ title, url });
+        }
+      });
+
+      if (currentBlock) blocks.push(currentBlock);
+      return blocks;
+    }
+
+    function extractSpeakersFromLine(text, block) {
+      // Split by "/" or "／" in case multiple service speakers are on one line
+      const segments = text.split(/[\/／]/);
+      segments.forEach(seg => {
+        const s = seg.trim();
+        const satM = s.match(/(?:週六|晚堂)講員[:：]\s*(.+)/);
+        if (satM) {
+          block.speakers.sat_night = satM[1].trim();
+          return;
+        }
+        const sunAmM = s.match(/(?:週日上午|上午堂)講員[:：]\s*(.+)/);
+        if (sunAmM) {
+          block.speakers.sun_am = sunAmM[1].trim();
+          return;
+        }
+        const sunPmM = s.match(/(?:週日下午|下午堂)講員[:：]\s*(.+)/);
+        if (sunPmM) {
+          block.speakers.sun_pm = sunPmM[1].trim();
+          return;
+        }
+        const sunAllM = s.match(/週日講員[:：]\s*(.+)/);
+        if (sunAllM) {
+          block.speakers.sun_am = sunAllM[1].trim();
+          block.speakers.sun_pm = sunAllM[1].trim();
+          return;
+        }
+        const genM = s.match(/講員[:：]\s*(.+)/);
+        if (genM) {
+          const spk = genM[1].trim();
+          block.speakers.sat_night = spk;
+          block.speakers.sun_am = spk;
+          block.speakers.sun_pm = spk;
+        }
+      });
+    }
+
+    function previewBatchImport() {
+      const raw = document.getElementById('batchImportTextarea').value;
+      parsedBatchEntries = parseBatchImportText(raw);
+      const countEl = document.getElementById('batchPreviewCount');
+      const listEl = document.getElementById('batchPreviewList');
+
+      if (parsedBatchEntries.length === 0) {
+        countEl.textContent = '尚未偵測到日期';
+        listEl.innerHTML = '<div class="py-3 text-center text-[11px] text-zinc-600">請輸入包含日期（例如 12/6）的文字</div>';
+        return;
+      }
+
+      countEl.textContent = `已解析 ${parsedBatchEntries.length} 個週末場次`;
+      listEl.innerHTML = parsedBatchEntries.map(b => {
+        const spkParts = [];
+        if (b.speakers.sat_night && b.speakers.sat_night === b.speakers.sun_am && b.speakers.sun_am === b.speakers.sun_pm) {
+          spkParts.push(`三場講員：${escapeHtml(b.speakers.sat_night)}`);
+        } else {
+          if (b.speakers.sat_night) spkParts.push(`週六：${escapeHtml(b.speakers.sat_night)}`);
+          if (b.speakers.sun_am) spkParts.push(`上午：${escapeHtml(b.speakers.sun_am)}`);
+          if (b.speakers.sun_pm) spkParts.push(`下午：${escapeHtml(b.speakers.sun_pm)}`);
+        }
+        const songSummary = b.songs.length > 0
+          ? b.songs.map(s => `${escapeHtml(s.title)}${s.url ? ' 🔗' : ''}`).join('、')
+          : '無歌單';
+
+        return `
+          <div class="p-2 rounded-lg bg-zinc-900/90 border border-zinc-800 space-y-0.5">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-amber-400">${b.displayDate} 週末三場</span>
+              <span class="text-[11px] text-zinc-300">${spkParts.join(' / ') || '未指定講員'}</span>
+            </div>
+            <div class="text-[11px] text-zinc-400 truncate">歌單 (${b.songs.length}首)：${songSummary}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function applyBatchImport() {
+      if (parsedBatchEntries.length === 0) {
+        showToast('沒有可匯入的資料，請先貼上內容');
+        return;
+      }
+
+      parsedBatchEntries.forEach(b => {
+        if (b.speakers.sat_night !== null) state.speakers[b.keys.satKey] = b.speakers.sat_night;
+        if (b.speakers.sun_am !== null) state.speakers[b.keys.sunAmKey] = b.speakers.sun_am;
+        if (b.speakers.sun_pm !== null) state.speakers[b.keys.sunPmKey] = b.speakers.sun_pm;
+
+        if (b.songs.length > 0) {
+          state.songs[b.keys.weekendKey] = b.songs;
+        }
+      });
+
+      saveState();
+      closeBatchImportModal();
+      renderScheduleTables();
+      showToast(`已成功批次更新 ${parsedBatchEntries.length} 個週末的講員與歌單！`);
     }
 
     function updateDeadlinePreview(srvId) {
