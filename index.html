@@ -487,6 +487,8 @@
   <script>
     const STORAGE_KEY = 'blackteam_github_v1_data';
     const SB_CONFIG_KEY = 'blackteam_supabase_cfg';
+    const EMBEDDED_SB_URL = 'https://gmyltkwhcxxdhhlcbwyj.supabase.co';
+    const EMBEDDED_SB_KEY = 'sb_publishable_re-BQaavx19SbqaiwrnM8w_Jn8GFwDx';
 
     const ROLES = [
       '控場',
@@ -1435,7 +1437,7 @@
       }).join('');
 
       // Supabase config fields
-      const sbCfg = JSON.parse(localStorage.getItem(SB_CONFIG_KEY) || '{}');
+      const sbCfg = getActiveSupabaseConfig();
       document.getElementById('sbUrlInput').value = sbCfg.url || '';
       document.getElementById('sbKeyInput').value = sbCfg.key || '';
     }
@@ -1559,10 +1561,21 @@
       renderScheduleTables();
     }
 
-    // Optional Supabase Sync
-    function initSupabaseFromStorage() {
+    // Embedded + Optional Override Supabase Sync
+    function getActiveSupabaseConfig() {
       try {
         const cfg = JSON.parse(localStorage.getItem(SB_CONFIG_KEY) || '{}');
+        if (cfg.url && cfg.key) return { url: cfg.url, key: cfg.key };
+      } catch (e) {}
+      if (EMBEDDED_SB_URL && EMBEDDED_SB_KEY) {
+        return { url: EMBEDDED_SB_URL, key: EMBEDDED_SB_KEY };
+      }
+      return {};
+    }
+
+    function initSupabaseFromStorage() {
+      try {
+        const cfg = getActiveSupabaseConfig();
         if (cfg.url && cfg.key && window.supabase) {
           supabaseClient = window.supabase.createClient(cfg.url, cfg.key);
           pullStateFromSupabase();
