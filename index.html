@@ -1373,50 +1373,71 @@
       const headerTag = selectedSrv === 'all'
         ? '本週服事提醒'
         : `本週${targetServices[0]?.name || ''}服事提醒`;
-      let lines = [`【BLACK TEAM ${headerTag}】\n`];
+      let lines = [`【BLACK TEAM ${headerTag}】`, ''];
       let sharedSongList = [];
 
-      targetServices.forEach(srv => {
+      targetServices.forEach((srv, srvIdx) => {
         const dates = getServiceDatesForMonth(srv.id, currentYear, currentMonth);
         const d = dates[weekIdx];
         if (!d) return;
         const slotKey = `${srv.id}_${d.iso}`;
         const weekendKey = getWeekendSongKey(srv.id, d.iso);
         const dayAssign = monthSched[slotKey] || {};
-        const spk = state.speakers[slotKey] ? `（講員：${state.speakers[slotKey]}）` : '';
+        const spk = state.speakers[slotKey] || '';
 
         if (sharedSongList.length === 0) {
           sharedSongList = state.songs[weekendKey] || state.songs[slotKey] || [];
         }
 
-        lines.push(`■ ${srv.name} ${d.label}(週${d.dayName})${spk}`);
-        const assignedStrings = [];
+        if (srvIdx > 0) {
+          lines.push('──────────────');
+        }
+        lines.push(`📅 ${srv.name} ${d.label}(週${d.dayName})`);
+        if (spk) {
+          lines.push(`🎤 講員：${spk}`);
+        }
+        lines.push('');
+
+        const assignedLines = [];
         const vacantRoles = [];
 
         ROLES.forEach(role => {
           const entry = dayAssign[role];
           const v = (entry && entry.volId) ? state.volunteers.find(x => x.id === entry.volId) : null;
           if (v) {
-            assignedStrings.push(`${role}：${v.name}${entry.isSupport ? '(支援)' : ''}`);
+            assignedLines.push(`• ${role}：${v.name}${entry.isSupport ? ' (支援)' : ''}`);
           } else {
             vacantRoles.push(role);
           }
         });
 
-        lines.push(assignedStrings.length > 0 ? assignedStrings.join('、') : '（尚未排班）');
+        if (assignedLines.length > 0) {
+          lines.push('👥 服事名單：');
+          assignedLines.forEach(item => lines.push(item));
+        } else {
+          lines.push('👥 服事名單：（尚未排班）');
+        }
+
+        lines.push('');
         if (vacantRoles.length > 0) {
-          lines.push(`⚠️ 空缺崗位（徵求支援）：${vacantRoles.join('、')}`);
+          lines.push(`⚠️ 空缺崗位（徵求支援）：`);
+          lines.push(vacantRoles.join('、'));
         } else {
           lines.push(`✅ 本場崗位已全數排滿`);
         }
         lines.push('');
       });
 
-      // Append Shared Worship Song List for the weekend
+      lines.push('──────────────');
       lines.push(`🎵 本週敬拜讚美歌單：`);
       if (sharedSongList.length > 0) {
         sharedSongList.forEach((s, idx) => {
-          lines.push(s.url ? `${idx + 1}. ${s.title}：${s.url}` : `${idx + 1}. ${s.title}`);
+          if (s.url) {
+            lines.push(`${idx + 1}. ${s.title}`);
+            lines.push(`   ${s.url}`);
+          } else {
+            lines.push(`${idx + 1}. ${s.title}`);
+          }
         });
       } else {
         lines.push('（尚未設定歌單）');
