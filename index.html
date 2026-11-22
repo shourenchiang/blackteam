@@ -413,12 +413,23 @@
   <div id="lineReminderModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-[#121215] border border-zinc-700 rounded-2xl max-w-lg w-full p-4 sm:p-5 space-y-3 shadow-2xl">
       <div class="flex items-center justify-between">
-        <h3 class="text-base font-extrabold text-amber-400">本週三場服事提醒文字</h3>
+        <h3 class="text-base font-extrabold text-amber-400">本週服事提醒文字</h3>
         <button onclick="closeLineReminderModal()" class="text-zinc-400 hover:text-white text-lg">✕</button>
       </div>
-      <div class="flex items-center gap-2">
-        <label class="text-xs text-zinc-400">選擇週次：</label>
-        <select id="reminderWeekSelect" onchange="updateReminderText()" class="px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-700 text-xs text-white"></select>
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="flex items-center gap-1.5">
+          <label class="text-xs text-zinc-400 whitespace-nowrap">選擇週次：</label>
+          <select id="reminderWeekSelect" onchange="updateReminderText()" class="px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-700 text-xs text-white"></select>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <label class="text-xs text-zinc-400 whitespace-nowrap">場次範圍：</label>
+          <select id="reminderServiceSelect" onchange="updateReminderText()" class="px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-700 text-xs text-amber-300 font-semibold">
+            <option value="all">全部三場</option>
+            <option value="sat_night">週六晚堂</option>
+            <option value="sun_am">週日上午堂</option>
+            <option value="sun_pm">週日下午堂</option>
+          </select>
+        </div>
       </div>
       <textarea id="reminderTextarea" rows="12" class="w-full rounded-xl bg-zinc-950 border border-zinc-800 p-3 text-xs text-zinc-200 leading-relaxed focus:outline-none focus:border-amber-500"></textarea>
       <button onclick="copyReminderText()" id="copyReminderBtn" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs sm:text-sm font-extrabold shadow-lg transition">
@@ -1355,12 +1366,17 @@
 
     function updateReminderText() {
       const weekIdx = Number(document.getElementById('reminderWeekSelect').value || 0);
+      const selectedSrv = document.getElementById('reminderServiceSelect')?.value || 'all';
       const mKey = getMonthKey();
       const monthSched = state.schedules[mKey] || {};
-      let lines = [`【BLACK TEAM 本週服事提醒】\n`];
+      const targetServices = SERVICES.filter(s => selectedSrv === 'all' || s.id === selectedSrv);
+      const headerTag = selectedSrv === 'all'
+        ? '本週服事提醒'
+        : `本週${targetServices[0]?.name || ''}服事提醒`;
+      let lines = [`【BLACK TEAM ${headerTag}】\n`];
       let sharedSongList = [];
 
-      SERVICES.forEach(srv => {
+      targetServices.forEach(srv => {
         const dates = getServiceDatesForMonth(srv.id, currentYear, currentMonth);
         const d = dates[weekIdx];
         if (!d) return;
@@ -1397,7 +1413,7 @@
       });
 
       // Append Shared Worship Song List for the weekend
-      lines.push(`🎵 本週三場共用敬拜讚美歌單：`);
+      lines.push(`🎵 本週敬拜讚美歌單：`);
       if (sharedSongList.length > 0) {
         sharedSongList.forEach((s, idx) => {
           lines.push(s.url ? `${idx + 1}. ${s.title}：${s.url}` : `${idx + 1}. ${s.title}`);
