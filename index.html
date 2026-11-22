@@ -205,9 +205,14 @@
     <!-- TAB 2: BLACKOUT DATES (義工劃休) -->
     <div id="tab-blackout" class="hidden space-y-3">
       <section class="bg-[#121215] border border-zinc-800/90 rounded-xl p-3 space-y-3">
-        <div>
-          <h2 class="text-sm sm:text-base font-extrabold text-white">義工無法服事日期登記（劃休）</h2>
-          <p class="text-xs text-zinc-400 mt-0.5">請先選擇您的名字，點擊該場次即可劃掉無法服事的日期（截止後自動鎖定）。</p>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 class="text-sm sm:text-base font-extrabold text-white">義工無法服事日期登記（劃休）</h2>
+            <p class="text-xs text-zinc-400 mt-0.5">目前檢視 <span class="text-amber-400 font-bold" id="blackoutMonthHint"></span> 服事表；請選擇名字後點擊無法服事的日期。</p>
+          </div>
+          <button onclick="jumpToNextMonth()" class="px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/50 text-xs font-bold text-amber-300 whitespace-nowrap">
+            前往下個月登記 →
+          </button>
         </div>
 
         <!-- Deadline Status Cards with Red Countdown -->
@@ -339,8 +344,8 @@
         <!-- Monthly Blackout Deadline Rules -->
         <section class="bg-[#121215] border border-zinc-800 rounded-xl p-3.5 space-y-3">
           <div>
-            <h3 class="text-sm font-extrabold text-amber-400">各堂義工劃休截止日設定（每月固定幾號）</h3>
-            <p class="text-[11px] text-zinc-400 mt-0.5">設定每個月的截止日與時間（例如：前月 20 號 23:59 截止登記次月服事）。</p>
+            <h3 class="text-sm font-extrabold text-amber-400">各堂義工劃休截止日設定（針對下一個月）</h3>
+            <p class="text-[11px] text-zinc-400 mt-0.5">設定每月幾號截止「下一個月」的劃休登記（例如：設定每月 30 號，代表 <span class="text-amber-300 font-semibold">11/30 截止登記 12 月份劃休</span>）。</p>
           </div>
           <div id="deadlineSettingsContainer" class="space-y-2.5"></div>
           <div class="flex justify-end">
@@ -481,9 +486,9 @@
         sun_pm: ''
       },
       deadlineRules: {
-        sat_night: { enabled: true, monthOffset: -1, day: 20, hour: 23, minute: 59 },
-        sun_am: { enabled: true, monthOffset: -1, day: 20, hour: 23, minute: 59 },
-        sun_pm: { enabled: true, monthOffset: -1, day: 20, hour: 23, minute: 59 }
+        sat_night: { enabled: true, monthOffset: -1, day: 30, hour: 23, minute: 59 },
+        sun_am: { enabled: true, monthOffset: -1, day: 30, hour: 23, minute: 59 },
+        sun_pm: { enabled: true, monthOffset: -1, day: 30, hour: 23, minute: 59 }
       },
       volunteers: [], // Cleared initially as requested
       blackouts: {},  // { "YYYY-MM": { "sat_night_YYYY-MM-DD": ["volId1"] } }
@@ -585,16 +590,15 @@
       if (!rule || !rule.enabled) {
         return { locked: false, label: '未設定截止限制', countdownText: '開放登記中', isUrgent: false };
       }
-      // Target month + monthOffset (-1 means previous month, 0 means same month)
-      const targetDate = new Date(year, (month - 1) + Number(rule.monthOffset), 1);
-      const dYear = targetDate.getFullYear();
-      const dMonth = targetDate.getMonth() + 1;
+      // Deadline is always set in the preceding month (e.g., 11/30 deadline is for December blackout registration)
+      const prevMonthDate = new Date(year, (month - 1) - 1, 1);
+      const dYear = prevMonthDate.getFullYear();
+      const dMonth = prevMonthDate.getMonth() + 1;
       const maxDay = new Date(dYear, dMonth, 0).getDate();
       const clampedDay = Math.min(Number(rule.day), maxDay);
       const deadlineDt = new Date(dYear, dMonth - 1, clampedDay, Number(rule.hour), Number(rule.minute), 59);
 
-      const prefix = Number(rule.monthOffset) === -1 ? '前月' : '當月';
-      const label = `${prefix}${clampedDay}號 (${dYear}/${String(dMonth).padStart(2, '0')}/${String(clampedDay).padStart(2, '0')} ${String(rule.hour).padStart(2, '0')}:${String(rule.minute).padStart(2, '0')})`;
+      const label = `${dMonth}/${clampedDay} ${String(rule.hour).padStart(2, '0')}:${String(rule.minute).padStart(2, '0')}（針對 ${month}月劃休）`;
 
       const diffMs = deadlineDt.getTime() - Date.now();
       if (diffMs <= 0) {
@@ -1418,8 +1422,24 @@
       });
     }
 
+    function jumpToNextMonth() {
+      const d = new Date();
+      let ny = d.getFullYear();
+      let nm = d.getMonth() + 2; // Next month (1-12)
+      if (nm > 12) {
+        nm = 1;
+        ny++;
+      }
+      currentYear = ny;
+      currentMonth = nm;
+      renderAll();
+      showToast(`已切換至 ${currentYear}年 ${currentMonth}月 劃休登記`);
+    }
+
     // Blackout Tab Rendering
     function renderBlackoutTab() {
+      const hintEl = document.getElementById('blackoutMonthHint');
+      if (hintEl) hintEl.textContent = `${currentYear}年${currentMonth}月`;
       const cardsContainer = document.getElementById('blackoutDeadlineCards');
       cardsContainer.innerHTML = SERVICES.map(srv => {
         const info = getDeadlineInfo(srv.id, currentYear, currentMonth);
@@ -1611,10 +1631,14 @@
       document.getElementById('leader_sun_am').value = state.serviceLeaders.sun_am || '';
       document.getElementById('leader_sun_pm').value = state.serviceLeaders.sun_pm || '';
 
-      // Deadline rules inputs
+      // Deadline rules inputs (Always closes next month's registration)
       const dlContainer = document.getElementById('deadlineSettingsContainer');
+      const nowDt = new Date();
+      const thisM = nowDt.getMonth() + 1;
+      const nextM = thisM === 12 ? 1 : thisM + 1;
+
       dlContainer.innerHTML = SERVICES.map(srv => {
-        const r = state.deadlineRules[srv.id] || { enabled: true, monthOffset: -1, day: 20, hour: 23, minute: 59 };
+        const r = state.deadlineRules[srv.id] || { enabled: true, monthOffset: -1, day: 30, hour: 23, minute: 59 };
         let dayOpts = '';
         for (let d = 1; d <= 31; d++) {
           dayOpts += `<option value="${d}" ${Number(r.day) === d ? 'selected' : ''}>${d} 號</option>`;
@@ -1629,19 +1653,22 @@
         });
 
         return `
-          <div class="p-2.5 rounded-lg bg-zinc-950 border border-zinc-800 flex flex-wrap items-center justify-between gap-2">
-            <label class="inline-flex items-center gap-2 text-xs font-bold text-white">
-              <input type="checkbox" id="dl_en_${srv.id}" ${r.enabled ? 'checked' : ''} class="accent-amber-500" />
-              <span>${srv.name}</span>
-            </label>
-            <div class="flex flex-wrap items-center gap-1.5 text-xs">
-              <select id="dl_mo_${srv.id}" class="px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-200">
-                <option value="-1" ${Number(r.monthOffset) === -1 ? 'selected' : ''}>前一個月</option>
-                <option value="0" ${Number(r.monthOffset) === 0 ? 'selected' : ''}>當月</option>
-              </select>
-              <select id="dl_day_${srv.id}" class="px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-amber-300 font-bold">${dayOpts}</select>
-              <select id="dl_hr_${srv.id}" class="px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-200">${hourOpts}</select>
-              <select id="dl_min_${srv.id}" class="px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-200">${minOpts}</select>
+          <div class="p-2.5 rounded-lg bg-zinc-950 border border-zinc-800 space-y-1.5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <label class="inline-flex items-center gap-2 text-xs font-bold text-white">
+                <input type="checkbox" id="dl_en_${srv.id}" ${r.enabled ? 'checked' : ''} class="accent-amber-500" />
+                <span>${srv.name}</span>
+              </label>
+              <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                <span class="text-zinc-400">每月</span>
+                <select id="dl_day_${srv.id}" onchange="updateDeadlinePreview('${srv.id}')" class="px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-amber-300 font-bold">${dayOpts}</select>
+                <select id="dl_hr_${srv.id}" onchange="updateDeadlinePreview('${srv.id}')" class="px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-200">${hourOpts}</select>
+                <select id="dl_min_${srv.id}" onchange="updateDeadlinePreview('${srv.id}')" class="px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-200">${minOpts}</select>
+                <span class="text-zinc-300 font-semibold">截止下月劃休</span>
+              </div>
+            </div>
+            <div id="dl_preview_${srv.id}" class="text-[11px] text-amber-400/90 pl-5">
+              範例：${thisM}/${r.day} ${String(r.hour).padStart(2, '0')}:${String(r.minute).padStart(2, '0')} 截止登記 ${nextM} 月份劃休
             </div>
           </div>
         `;
@@ -1720,11 +1747,22 @@
       showToast('已儲存各堂幹部標示');
     }
 
+    function updateDeadlinePreview(srvId) {
+      const nowDt = new Date();
+      const thisM = nowDt.getMonth() + 1;
+      const nextM = thisM === 12 ? 1 : thisM + 1;
+      const d = document.getElementById(`dl_day_${srvId}`).value;
+      const h = String(document.getElementById(`dl_hr_${srvId}`).value).padStart(2, '0');
+      const m = String(document.getElementById(`dl_min_${srvId}`).value).padStart(2, '0');
+      const el = document.getElementById(`dl_preview_${srvId}`);
+      if (el) el.textContent = `範例：${thisM}/${d} ${h}:${m} 截止登記 ${nextM} 月份劃休`;
+    }
+
     function saveDeadlineRules() {
       SERVICES.forEach(srv => {
         state.deadlineRules[srv.id] = {
           enabled: document.getElementById(`dl_en_${srv.id}`).checked,
-          monthOffset: Number(document.getElementById(`dl_mo_${srv.id}`).value),
+          monthOffset: -1,
           day: Number(document.getElementById(`dl_day_${srv.id}`).value),
           hour: Number(document.getElementById(`dl_hr_${srv.id}`).value),
           minute: Number(document.getElementById(`dl_min_${srv.id}`).value)
