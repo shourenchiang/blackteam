@@ -1443,13 +1443,16 @@
       const cardsContainer = document.getElementById('blackoutDeadlineCards');
       cardsContainer.innerHTML = SERVICES.map(srv => {
         const info = getDeadlineInfo(srv.id, currentYear, currentMonth);
+        const badgeStyle = info.locked
+          ? 'bg-red-950/90 border-red-700/80 text-red-400'
+          : 'bg-emerald-950/90 border-emerald-700/80 text-emerald-400';
         return `
-          <div class="p-2.5 rounded-xl bg-zinc-950 border ${info.locked ? 'border-red-900/80' : 'border-zinc-800'} flex items-center justify-between gap-2">
+          <div class="p-2.5 rounded-xl bg-zinc-950 border ${info.locked ? 'border-red-900/80' : 'border-emerald-900/60'} flex items-center justify-between gap-2">
             <div class="min-w-0">
               <div class="text-xs font-extrabold text-white">${srv.name}</div>
               <div class="text-[11px] text-zinc-400 truncate">截止：${info.label}</div>
             </div>
-            <span class="shrink-0 px-2 py-1 rounded-md bg-red-950/90 border border-red-700/80 text-[11px] font-extrabold text-red-400">
+            <span class="shrink-0 px-2 py-1 rounded-md border text-[11px] font-extrabold ${badgeStyle}">
               ${info.countdownText}
             </span>
           </div>
@@ -1505,7 +1508,7 @@
           <div class="bg-zinc-950 border border-zinc-800/90 rounded-xl p-3 space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-xs font-extrabold text-white">${srv.name}</span>
-              <span class="text-[10px] font-bold text-red-400">${info.countdownText}</span>
+              <span class="text-[10px] font-bold ${info.locked ? 'text-red-400' : 'text-emerald-400'}">${info.countdownText}</span>
             </div>
             <div class="space-y-1.5">${dateBtns}</div>
           </div>
