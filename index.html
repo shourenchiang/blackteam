@@ -6,6 +6,7 @@
   <title>BLACK TEAM 影視團隊服事表</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -74,46 +75,27 @@
 </head>
 <body class="min-h-screen bg-[#09090B] text-zinc-100 font-sans antialiased pb-24">
 
-  <!-- Screenshot Floating Control Bar -->
-  <div id="screenshotBar" class="hidden fixed top-0 inset-x-0 z-50 bg-zinc-950/95 backdrop-blur-md border-b border-amber-500/40 px-3 py-2.5 shadow-2xl">
-    <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
-      <div class="flex items-center gap-1.5 overflow-x-auto">
-        <span class="text-xs font-bold text-amber-400 mr-1 whitespace-nowrap">截圖範圍：</span>
-        <button onclick="setScreenshotScope('all')" id="sc-all" class="px-2.5 py-1 rounded text-xs font-semibold bg-amber-500 text-black whitespace-nowrap">全部總表</button>
-        <button onclick="setScreenshotScope('sat_night')" id="sc-sat_night" class="px-2.5 py-1 rounded text-xs font-semibold bg-zinc-800 text-zinc-300 whitespace-nowrap">週六晚堂</button>
-        <button onclick="setScreenshotScope('sun_am')" id="sc-sun_am" class="px-2.5 py-1 rounded text-xs font-semibold bg-zinc-800 text-zinc-300 whitespace-nowrap">週日上午堂</button>
-        <button onclick="setScreenshotScope('sun_pm')" id="sc-sun_pm" class="px-2.5 py-1 rounded text-xs font-semibold bg-zinc-800 text-zinc-300 whitespace-nowrap">週日下午堂</button>
-      </div>
-      <button onclick="toggleScreenshotMode(false)" class="px-3 py-1 rounded-lg bg-red-900/80 hover:bg-red-800 text-red-100 text-xs font-bold border border-red-700/60 whitespace-nowrap">
-        退出截圖模式
-      </button>
-    </div>
-  </div>
-
   <!-- Top Navigation Header -->
   <header class="no-screenshot sticky top-0 z-30 bg-[#09090B]/95 backdrop-blur-md border-b border-zinc-800/90">
     <div class="max-w-5xl mx-auto px-3 py-2.5 flex items-center justify-between gap-2">
-      <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-zinc-800 to-black border border-amber-500/40 flex items-center justify-center shadow-inner">
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-zinc-800 to-black border border-amber-500/40 flex items-center justify-center shadow-inner shrink-0">
           <span class="text-amber-400 font-black text-xs tracking-tighter">BT</span>
         </div>
         <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-sm sm:text-base font-black tracking-wider text-white">BLACK TEAM</h1>
-            <span id="syncBadge" class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700/70">本機儲存</span>
-          </div>
-          <p class="text-[10px] text-zinc-400 tracking-wide">影視團隊服事排班系統</p>
+          <h1 class="text-sm sm:text-base font-black tracking-wider text-white whitespace-nowrap">BLACK TEAM</h1>
+          <p class="text-[10px] text-zinc-400 tracking-wide whitespace-nowrap">影視團隊服事排班系統</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-1.5">
-        <button onclick="switchTab('my_schedule')" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-xs font-semibold text-amber-400 flex items-center gap-1 transition">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button onclick="switchTab('my_schedule')" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-xs font-semibold text-amber-400 flex items-center gap-1 whitespace-nowrap shrink-0 transition">
+          <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
           <span>與我有關</span>
         </button>
 
-        <button id="adminLoginBtn" onclick="openAdminModal()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-xs font-semibold text-zinc-300 flex items-center gap-1 transition">
-          <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        <button id="adminLoginBtn" onclick="openAdminModal()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-xs font-semibold text-zinc-300 flex items-center gap-1 whitespace-nowrap shrink-0 transition">
+          <svg class="w-3.5 h-3.5 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
           <span id="adminBtnText">管理者登入</span>
         </button>
       </div>
@@ -141,22 +123,25 @@
       </div>
 
       <div class="no-screenshot flex flex-wrap items-center gap-1.5">
-        <button onclick="toggleScreenshotMode(true)" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-200 flex items-center gap-1">
-          <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-          <span>截圖模式</span>
-        </button>
-
         <div id="adminScheduleActions" class="hidden flex flex-wrap items-center gap-1.5">
-          <button onclick="autoScheduleMonth()" class="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold flex items-center gap-1 shadow">
+          <button onclick="autoScheduleMonth()" class="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold flex items-center gap-1 shadow whitespace-nowrap">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
             <span>一鍵排班</span>
           </button>
-          <button onclick="clearMonthSchedule()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-red-950/70 border border-zinc-700 hover:border-red-800 text-xs font-semibold text-red-400">
-            清空本月
+          <button onclick="exportScheduleImage('all')" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-amber-500/50 text-xs font-bold text-amber-300 flex items-center gap-1 whitespace-nowrap">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span>截圖三場總表</span>
           </button>
-          <button onclick="openLineReminderModal()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-amber-500/40 text-xs font-semibold text-amber-300 flex items-center gap-1">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+          <button onclick="exportScheduleImage('current')" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-200 flex items-center gap-1 whitespace-nowrap">
+            <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <span>截圖目前場次</span>
+          </button>
+          <button onclick="openLineReminderModal()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-200 flex items-center gap-1 whitespace-nowrap">
+            <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
             <span>群組提醒文字</span>
+          </button>
+          <button onclick="clearMonthSchedule()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-red-950/70 border border-zinc-700 hover:border-red-800 text-xs font-semibold text-red-400 whitespace-nowrap">
+            清空本月
           </button>
         </div>
       </div>
@@ -365,42 +350,14 @@
           </div>
         </section>
 
-        <!-- Admin Password & Cloud Sync Settings -->
-        <section class="bg-[#121215] border border-zinc-800 rounded-xl p-3.5 space-y-4">
-          <div class="space-y-2">
-            <h3 class="text-sm font-extrabold text-white">修改管理者密碼</h3>
-            <div class="flex flex-wrap items-center gap-2">
-              <input type="password" id="newAdminPasswordInput" placeholder="輸入新密碼" class="px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-xs text-white" />
-              <button onclick="changeAdminPassword()" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-400 text-xs font-bold border border-zinc-700">
-                更新密碼
-              </button>
-            </div>
-          </div>
-
-          <hr class="border-zinc-800" />
-
-          <!-- Optional Supabase Multi-Device Realtime Sync -->
-          <div class="space-y-2.5">
-            <div class="flex items-center justify-between">
-              <h3 class="text-sm font-extrabold text-amber-400">雲端資料庫同步設定 (Supabase 選填)</h3>
-              <span class="text-[10px] text-zinc-400">GitHub Pages 多人即時同步用</span>
-            </div>
-            <p class="text-[11px] text-zinc-400 leading-relaxed">
-              若上傳至 GitHub Pages 後希望全體義工手機即時看到彼此劃休與認領支援，可填入免費 Supabase 專案的 URL 與 Anon Key：
-            </p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <input type="text" id="sbUrlInput" placeholder="Supabase Project URL (https://xxx.supabase.co)" class="px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-xs text-zinc-200" />
-              <input type="text" id="sbKeyInput" placeholder="Supabase Anon Public Key" class="px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-xs text-zinc-200" />
-            </div>
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <button onclick="copySupabaseSql()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-[11px] text-zinc-300">
-                複製 SQL 建表指令
-              </button>
-              <div class="flex gap-2">
-                <button onclick="disconnectSupabase()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 text-xs text-zinc-400 border border-zinc-800">中斷連線</button>
-                <button onclick="saveSupabaseConfig()" class="px-3 py-1.5 rounded-lg bg-amber-500 text-black text-xs font-bold">連線並同步</button>
-              </div>
-            </div>
+        <!-- Admin Password Settings -->
+        <section class="bg-[#121215] border border-zinc-800 rounded-xl p-3.5 space-y-2">
+          <h3 class="text-sm font-extrabold text-white">修改管理者密碼</h3>
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="password" id="newAdminPasswordInput" placeholder="輸入新密碼" class="px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-xs text-white" />
+            <button onclick="changeAdminPassword()" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-400 text-xs font-bold border border-zinc-700">
+              更新密碼
+            </button>
           </div>
         </section>
       </div>
@@ -467,16 +424,21 @@
 
   <!-- Worship Song Edit Modal -->
   <div id="songModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-[#121215] border border-zinc-700 rounded-2xl max-w-md w-full p-4 sm:p-5 space-y-3 shadow-2xl">
-      <div class="flex items-center justify-between">
+    <div class="bg-[#121215] border border-zinc-700 rounded-2xl max-w-lg w-full p-4 sm:p-5 space-y-3 shadow-2xl max-h-[88vh] flex flex-col">
+      <div class="flex items-center justify-between shrink-0">
         <h3 id="songModalTitle" class="text-sm sm:text-base font-extrabold text-amber-400">編輯敬拜讚美歌單</h3>
-        <button onclick="closeSongModal()" class="text-zinc-400 hover:text-white">✕</button>
+        <button onclick="closeSongModal()" class="text-zinc-400 hover:text-white text-lg">✕</button>
       </div>
-      <p class="text-[11px] text-zinc-400">每行一首歌曲，格式：<span class="text-zinc-200 font-mono">歌名 | YouTube連結</span>（連結選填）</p>
-      <textarea id="songModalTextarea" rows="6" placeholder="例如：&#10;恩典之路 | https://www.youtube.com/watch?v=...&#10;滿有能力" class="w-full rounded-xl bg-zinc-950 border border-zinc-700 p-3 text-xs text-zinc-100 leading-relaxed focus:outline-none focus:border-amber-500"></textarea>
-      <div class="flex justify-end gap-2">
-        <button onclick="closeSongModal()" class="px-4 py-2 rounded-xl bg-zinc-800 text-xs text-zinc-300">取消</button>
-        <button onclick="saveWorshipSongs()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold">儲存歌單</button>
+      <p class="text-[11px] text-zinc-400 shrink-0">輸入歌名後可點擊 <span class="text-red-400 font-bold">YT 找歌</span> 前往 YouTube 搜尋，複製網址貼回下方欄位即可儲存。</p>
+      <div id="songRowsContainer" class="space-y-2.5 overflow-y-auto pr-1 flex-1"></div>
+      <div class="flex items-center justify-between pt-2 border-t border-zinc-800 shrink-0">
+        <button onclick="addSongEditorRow()" class="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-bold text-amber-400">
+          + 新增一首歌曲
+        </button>
+        <div class="flex gap-2">
+          <button onclick="closeSongModal()" class="px-4 py-2 rounded-xl bg-zinc-800 text-xs text-zinc-300">取消</button>
+          <button onclick="saveWorshipSongs()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold">儲存歌單</button>
+        </div>
       </div>
     </div>
   </div>
@@ -576,6 +538,30 @@
       return `${y}-${String(m).padStart(2, '0')}`;
     }
 
+    function getWeekendSongKey(serviceId, isoDate) {
+      const [y, m, d] = isoDate.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      if (serviceId === 'sat_night') {
+        dt.setDate(dt.getDate() + 1); // Pair Saturday night with that weekend's Sunday
+      }
+      const wy = dt.getFullYear();
+      const wm = String(dt.getMonth() + 1).padStart(2, '0');
+      const wd = String(dt.getDate()).padStart(2, '0');
+      return `weekend_${wy}-${wm}-${wd}`;
+    }
+
+    function getWeekendLabel(serviceId, isoDate) {
+      const [y, m, d] = isoDate.split('-').map(Number);
+      const sat = new Date(y, m - 1, d);
+      const sun = new Date(y, m - 1, d);
+      if (serviceId === 'sat_night') {
+        sun.setDate(sun.getDate() + 1);
+      } else {
+        sat.setDate(sat.getDate() - 1);
+      }
+      return `${sat.getMonth() + 1}/${sat.getDate()}(六)～${sun.getMonth() + 1}/${sun.getDate()}(日) 三場共用`;
+    }
+
     function getServiceDatesForMonth(serviceId, year, month) {
       const targetDay = serviceId === 'sat_night' ? 6 : 0; // 6=Sat, 0=Sun
       const dates = [];
@@ -656,30 +642,175 @@
       renderAll();
     }
 
-    // Screenshot Mode
-    function toggleScreenshotMode(enable) {
-      document.body.classList.toggle('screenshot-mode', enable);
-      document.getElementById('screenshotBar').classList.toggle('hidden', !enable);
-      if (enable) {
-        switchTab('schedule');
-        setScreenshotScope('all');
-      } else {
-        serviceFilter = 'all';
-        renderScheduleTables();
+    // One-Click Schedule Image Export (Admin Only)
+    // scopeMode === 'all' -> Print-friendly White background + Black & Yellow/Amber text
+    // scopeMode === 'current' -> Studio Dark background for mobile screenshot
+    async function exportScheduleImage(scopeMode) {
+      if (typeof html2canvas === 'undefined') {
+        showToast('截圖元件載入中，請稍候再試');
+        return;
       }
-    }
+      const isPrintLight = scopeMode === 'all';
+      showToast(isPrintLight ? '正在產生列印版（白底）三場總表...' : '正在產生手機版黑底截圖...');
 
-    function setScreenshotScope(scope) {
-      screenshotScope = scope;
-      ['all', 'sat_night', 'sun_am', 'sun_pm'].forEach(s => {
-        const btn = document.getElementById(`sc-${s}`);
-        if (btn) {
-          btn.className = s === scope
-            ? 'px-2.5 py-1 rounded text-xs font-semibold bg-amber-500 text-black whitespace-nowrap'
-            : 'px-2.5 py-1 rounded text-xs font-semibold bg-zinc-800 text-zinc-300 whitespace-nowrap';
-        }
+      const targetFilter = scopeMode === 'all' ? 'all' : serviceFilter;
+      const targetServices = SERVICES.filter(s => targetFilter === 'all' || targetFilter === s.id);
+      const mKey = getMonthKey();
+      const monthSched = state.schedules[mKey] || {};
+
+      // Theme palette: Print Light (White + Black + Amber/Yellow) vs Studio Dark
+      const theme = isPrintLight ? {
+        pageBg: '#FFFFFF',
+        cardBg: '#FFFFFF',
+        headerBg: '#FEF3C7',      // Soft warm yellow tint
+        subHeaderBg: '#F4F4F5',   // Light neutral gray
+        roleColBg: '#FAFAFA',
+        border: '#D4D4D8',
+        titleMain: '#111827',     // Deep black
+        titleAccent: '#D97706',   // Rich yellow-amber
+        subText: '#374151',
+        mutedText: '#6B7280',
+        serviceBadgeBg: '#FACC15',// Bright yellow highlight
+        serviceBadgeText: '#111827',
+        speakerBg: '#FFFBEB',
+        speakerText: '#B45309',   // Deep amber-yellow
+        cellText: '#111827',      // Crisp black
+        emptyText: '#9CA3AF',
+        supportBg: '#FEE2E2',
+        supportText: '#991B1B'
+      } : {
+        pageBg: '#09090B',
+        cardBg: '#121215',
+        headerBg: '#18181B',
+        subHeaderBg: '#18181B',
+        roleColBg: '#141417',
+        border: '#27272A',
+        titleMain: '#FFFFFF',
+        titleAccent: '#F59E0B',
+        subText: '#A1A1AA',
+        mutedText: '#71717A',
+        serviceBadgeBg: 'transparent',
+        serviceBadgeText: '#F59E0B',
+        speakerBg: '#0F0F12',
+        speakerText: '#FBBF24',
+        cellText: '#F4F4F5',
+        emptyText: '#52525B',
+        supportBg: '#2A0D12',
+        supportText: '#FECACA'
+      };
+
+      const wrapper = document.createElement('div');
+      wrapper.style.position = 'fixed';
+      wrapper.style.left = '-9999px';
+      wrapper.style.top = '0';
+      wrapper.style.width = '820px';
+      wrapper.style.backgroundColor = theme.pageBg;
+      wrapper.style.color = theme.cellText;
+      wrapper.style.padding = '20px';
+      wrapper.style.fontFamily = "'Inter', 'Noto Sans TC', sans-serif";
+
+      const titleScope = targetFilter === 'all'
+        ? '三場完整服事總表（列印版）'
+        : (SERVICES.find(s => s.id === targetFilter)?.name || '服事表');
+
+      let innerHtml = `
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid ${isPrintLight ? '#F59E0B' : '#27272A'};padding-bottom:10px;margin-bottom:14px;">
+          <div>
+            <div style="font-size:20px;font-weight:900;letter-spacing:1.5px;color:${theme.titleMain};">
+              BLACK TEAM <span style="color:${theme.titleAccent};">${currentYear}年 ${currentMonth}月</span>
+            </div>
+            <div style="font-size:12px;color:${theme.subText};font-weight:600;margin-top:2px;">影視團隊服事表 · ${titleScope}</div>
+          </div>
+          <div style="font-size:11px;color:${theme.mutedText};font-weight:700;">BLACK TEAM PRODUCTION</div>
+        </div>
+      `;
+
+      targetServices.forEach(srv => {
+        const dates = getServiceDatesForMonth(srv.id, currentYear, currentMonth);
+        const leaderText = state.serviceLeaders[srv.id] || '';
+        const thCols = dates.map(d => `
+          <th style="padding:7px 6px;text-align:center;border:1px solid ${theme.border};background:${theme.subHeaderBg};color:${theme.titleMain};font-size:13px;font-weight:800;">
+            ${d.label} <span style="font-size:10px;color:${theme.mutedText};font-weight:600;">(週${d.dayName})</span>
+          </th>
+        `).join('');
+
+        const spkCols = dates.map(d => {
+          const spk = state.speakers[`${srv.id}_${d.iso}`] || '-';
+          return `<td style="padding:5px 6px;text-align:center;border:1px solid ${theme.border};background:${theme.speakerBg};color:${theme.speakerText};font-size:12px;font-weight:800;">${escapeHtml(spk)}</td>`;
+        }).join('');
+
+        const bodyRows = ROLES.map(role => {
+          const tds = dates.map(d => {
+            const entry = (monthSched[`${srv.id}_${d.iso}`] || {})[role];
+            const vol = entry ? state.volunteers.find(v => v.id === entry.volId) : null;
+            if (!vol) {
+              return `<td style="padding:5px 6px;text-align:center;border:1px solid ${theme.border};color:${theme.emptyText};font-size:12px;">-</td>`;
+            }
+            if (entry.isSupport) {
+              return `<td style="padding:5px 6px;text-align:center;border:1px solid ${theme.border};background:${theme.supportBg};color:${theme.supportText};font-size:12px;font-weight:800;">${escapeHtml(vol.name)}(支)</td>`;
+            }
+            return `<td style="padding:5px 6px;text-align:center;border:1px solid ${theme.border};color:${theme.cellText};font-size:12px;font-weight:700;">${escapeHtml(vol.name)}</td>`;
+          }).join('');
+          return `
+            <tr>
+              <td style="padding:5px 8px;border:1px solid ${theme.border};background:${theme.roleColBg};color:${theme.titleMain};font-size:12px;font-weight:800;white-space:nowrap;">${role}</td>
+              ${tds}
+            </tr>
+          `;
+        }).join('');
+
+        const srvBadgeHtml = isPrintLight
+          ? `<span style="display:inline-block;padding:2px 8px;border-radius:5px;background:${theme.serviceBadgeBg};color:${theme.serviceBadgeText};font-size:13px;font-weight:900;">${srv.name}</span>`
+          : `<span style="font-size:13px;font-weight:800;color:${theme.serviceBadgeText};">${srv.name}</span>`;
+
+        innerHtml += `
+          <div style="margin-bottom:14px;border:1px solid ${theme.border};border-radius:8px;overflow:hidden;background:${theme.cardBg};">
+            <div style="padding:7px 12px;background:${theme.headerBg};border-bottom:1px solid ${theme.border};display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                ${srvBadgeHtml}
+                ${leaderText ? `<span style="margin-left:10px;font-size:11px;font-weight:700;color:${theme.titleMain};">${escapeHtml(leaderText)}</span>` : ''}
+              </div>
+              <span style="font-size:10px;font-weight:700;color:${theme.mutedText};">共 ${dates.length} 週</span>
+            </div>
+            <table style="width:100%;border-collapse:collapse;">
+              <thead>
+                <tr>
+                  <th style="padding:7px 8px;text-align:left;border:1px solid ${theme.border};background:${theme.subHeaderBg};color:${theme.subText};font-size:11px;font-weight:800;width:96px;">崗位 / 日期</th>
+                  ${thCols}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:5px 8px;border:1px solid ${theme.border};background:${theme.speakerBg};color:${theme.speakerText};font-size:11px;font-weight:800;">當天講員</td>
+                  ${spkCols}
+                </tr>
+                ${bodyRows}
+              </tbody>
+            </table>
+          </div>
+        `;
       });
-      renderScheduleTables();
+
+      wrapper.innerHTML = innerHtml;
+      document.body.appendChild(wrapper);
+
+      try {
+        const canvas = await html2canvas(wrapper, {
+          backgroundColor: theme.pageBg,
+          scale: 2,
+          useCORS: true
+        });
+        const link = document.createElement('a');
+        const fileScope = targetFilter === 'all' ? '三場總表(列印版)' : titleScope;
+        link.download = `BLACK_TEAM_${currentYear}年${currentMonth}月_${fileScope}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showToast(isPrintLight ? '已下載白底列印版三場總表！' : '已下載黑底場次截圖！');
+      } catch (err) {
+        showToast('截圖產生失敗，請稍後再試');
+      } finally {
+        document.body.removeChild(wrapper);
+      }
     }
 
     function setServiceFilter(flt) {
@@ -928,10 +1059,12 @@
           `;
         }).join('');
 
-        // Worship Songs Section at bottom of each service card
+        // Worship Songs Section at bottom of each service card (Shared across all 3 services per weekend)
         const worshipCols = dates.map(d => {
           const slotKey = `${srv.id}_${d.iso}`;
-          const songList = state.songs[slotKey] || [];
+          const weekendKey = getWeekendSongKey(srv.id, d.iso);
+          const weekendLabel = getWeekendLabel(srv.id, d.iso);
+          const songList = state.songs[weekendKey] || state.songs[slotKey] || [];
           const songsHtml = songList.length > 0
             ? songList.map((s, idx) => {
                 if (s.url) {
@@ -952,7 +1085,7 @@
             <div class="bg-zinc-950/80 border border-zinc-800/80 rounded-lg p-2 space-y-1">
               <div class="flex items-center justify-between border-b border-zinc-800/80 pb-1">
                 <span class="text-[11px] font-bold text-zinc-300">${d.label} (週${d.dayName})</span>
-                ${isAdmin && !isScMode ? `<button onclick="openSongModal('${slotKey}', '${srv.name} ${d.label}')" class="text-[10px] text-amber-400 hover:underline font-semibold">編輯</button>` : ''}
+                ${isAdmin && !isScMode ? `<button onclick="openSongModal('${weekendKey}', '${weekendLabel}')" class="text-[10px] text-amber-400 hover:underline font-semibold">編輯</button>` : ''}
               </div>
               <div class="space-y-1 pt-0.5">${songsHtml}</div>
             </div>
@@ -995,7 +1128,7 @@
             <div class="no-screenshot px-3 py-2.5 bg-zinc-900/50 border-t border-zinc-800/90 space-y-2">
               <div class="flex items-center gap-1.5 text-xs font-bold text-zinc-300">
                 <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
-                <span>當週敬拜讚美歌單（點擊歌名可開啟 YouTube）</span>
+                <span>當週三場共用敬拜讚美歌單（點擊歌名可開啟 YouTube，編輯後三場同步更新）</span>
               </div>
               <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2">
                 ${worshipCols}
@@ -1110,13 +1243,65 @@
       showToast('已清空本月排班');
     }
 
-    // Worship Songs Modal
+    // Worship Songs Modal (Interactive Title + YT Search + Paste URL)
     function openSongModal(slotKey, titleLabel) {
       currentSongEditKey = slotKey;
       document.getElementById('songModalTitle').textContent = `編輯歌單 — ${titleLabel}`;
       const list = state.songs[slotKey] || [];
-      document.getElementById('songModalTextarea').value = list.map(s => s.url ? `${s.title} | ${s.url}` : s.title).join('\n');
+      const container = document.getElementById('songRowsContainer');
+      container.innerHTML = '';
+      if (list.length === 0) {
+        for (let i = 0; i < 4; i++) addSongEditorRow('', '');
+      } else {
+        list.forEach(item => addSongEditorRow(item.title || '', item.url || ''));
+      }
       document.getElementById('songModal').classList.remove('hidden');
+    }
+
+    function addSongEditorRow(title = '', url = '') {
+      const container = document.getElementById('songRowsContainer');
+      const idx = container.children.length + 1;
+      const row = document.createElement('div');
+      row.className = 'song-edit-row p-2.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2';
+      row.innerHTML = `
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs font-extrabold text-amber-400 w-5 shrink-0 song-row-num">${idx}.</span>
+          <input type="text" value="${escapeHtml(title)}" placeholder="輸入歌名（例如：恩典之路）"
+            class="song-title-input flex-1 px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-xs text-white focus:outline-none focus:border-amber-500" />
+          <button type="button" onclick="searchSongOnYouTube(this)"
+            class="px-2.5 py-1.5 rounded-lg bg-red-950/90 hover:bg-red-900 border border-red-700/80 text-[11px] font-bold text-red-200 flex items-center gap-1 shrink-0 transition">
+            <svg class="w-3.5 h-3.5 text-red-400" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            <span>YT 找歌</span>
+          </button>
+          <button type="button" onclick="removeSongEditorRow(this)" title="刪除此首"
+            class="px-2 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-red-400 text-xs">✕</button>
+        </div>
+        <div class="pl-6">
+          <input type="url" value="${escapeHtml(url)}" placeholder="貼上複製的 YouTube 連結 (https://youtu.be/...)"
+            class="song-url-input w-full px-2.5 py-1.5 rounded-lg bg-zinc-900/80 border border-zinc-800 text-[11px] text-amber-300 placeholder-zinc-600 focus:outline-none focus:border-amber-500" />
+        </div>
+      `;
+      container.appendChild(row);
+    }
+
+    function removeSongEditorRow(btn) {
+      const row = btn.closest('.song-edit-row');
+      if (row) row.remove();
+      document.querySelectorAll('#songRowsContainer .song-row-num').forEach((el, i) => {
+        el.textContent = `${i + 1}.`;
+      });
+    }
+
+    function searchSongOnYouTube(btn) {
+      const row = btn.closest('.song-edit-row');
+      const title = row ? row.querySelector('.song-title-input').value.trim() : '';
+      if (!title) {
+        showToast('請先輸入歌名再按 YT 找歌');
+        row?.querySelector('.song-title-input')?.focus();
+        return;
+      }
+      const query = encodeURIComponent(title);
+      window.open(`https://www.youtube.com/results?search_query=${query}`, '_blank', 'noopener,noreferrer');
     }
 
     function closeSongModal() {
@@ -1124,21 +1309,23 @@
     }
 
     function saveWorshipSongs() {
-      const lines = document.getElementById('songModalTextarea').value.split('\n').map(l => l.trim()).filter(Boolean);
-      state.songs[currentSongEditKey] = lines.map(line => {
-        const parts = line.split('|');
-        return {
-          title: parts[0].trim(),
-          url: parts[1] ? parts[1].trim() : ''
-        };
+      const rows = document.querySelectorAll('#songRowsContainer .song-edit-row');
+      const result = [];
+      rows.forEach(row => {
+        const title = row.querySelector('.song-title-input').value.trim();
+        const url = row.querySelector('.song-url-input').value.trim();
+        if (title) {
+          result.push({ title, url });
+        }
       });
+      state.songs[currentSongEditKey] = result;
       saveState();
       closeSongModal();
       renderScheduleTables();
-      showToast('歌單已儲存');
+      showToast('三場共用歌單已儲存！');
     }
 
-    // LINE Reminder Text Modal
+    // LINE Reminder Text Modal (Includes Assigned Roles, Vacant Roles, and Shared Worship Songs)
     function openLineReminderModal() {
       const sel = document.getElementById('reminderWeekSelect');
       const satDates = getServiceDatesForMonth('sat_night', currentYear, currentMonth);
@@ -1167,30 +1354,54 @@
       const mKey = getMonthKey();
       const monthSched = state.schedules[mKey] || {};
       let lines = [`【BLACK TEAM 本週服事提醒】\n`];
+      let sharedSongList = [];
 
       SERVICES.forEach(srv => {
         const dates = getServiceDatesForMonth(srv.id, currentYear, currentMonth);
         const d = dates[weekIdx];
         if (!d) return;
         const slotKey = `${srv.id}_${d.iso}`;
+        const weekendKey = getWeekendSongKey(srv.id, d.iso);
         const dayAssign = monthSched[slotKey] || {};
         const spk = state.speakers[slotKey] ? `（講員：${state.speakers[slotKey]}）` : '';
 
+        if (sharedSongList.length === 0) {
+          sharedSongList = state.songs[weekendKey] || state.songs[slotKey] || [];
+        }
+
         lines.push(`■ ${srv.name} ${d.label}(週${d.dayName})${spk}`);
-        const roleStrings = [];
+        const assignedStrings = [];
+        const vacantRoles = [];
+
         ROLES.forEach(role => {
           const entry = dayAssign[role];
-          if (entry && entry.volId) {
-            const v = state.volunteers.find(x => x.id === entry.volId);
-            if (v) {
-              roleStrings.push(`${role}：${v.name}${entry.isSupport ? '(支援)' : ''}`);
-            }
+          const v = (entry && entry.volId) ? state.volunteers.find(x => x.id === entry.volId) : null;
+          if (v) {
+            assignedStrings.push(`${role}：${v.name}${entry.isSupport ? '(支援)' : ''}`);
+          } else {
+            vacantRoles.push(role);
           }
         });
-        lines.push(roleStrings.length > 0 ? roleStrings.join('、') : '（尚未排班）');
+
+        lines.push(assignedStrings.length > 0 ? assignedStrings.join('、') : '（尚未排班）');
+        if (vacantRoles.length > 0) {
+          lines.push(`⚠️ 空缺崗位（徵求支援）：${vacantRoles.join('、')}`);
+        } else {
+          lines.push(`✅ 本場崗位已全數排滿`);
+        }
         lines.push('');
       });
 
+      // Append Shared Worship Song List for the weekend
+      lines.push(`🎵 本週三場共用敬拜讚美歌單：`);
+      if (sharedSongList.length > 0) {
+        sharedSongList.forEach((s, idx) => {
+          lines.push(s.url ? `${idx + 1}. ${s.title}：${s.url}` : `${idx + 1}. ${s.title}`);
+        });
+      } else {
+        lines.push('（尚未設定歌單）');
+      }
+      lines.push('');
       lines.push('請大家準時到場試機，辛苦了！');
       document.getElementById('reminderTextarea').value = lines.join('\n');
     }
@@ -1436,10 +1647,7 @@
         `;
       }).join('');
 
-      // Supabase config fields
-      const sbCfg = getActiveSupabaseConfig();
-      document.getElementById('sbUrlInput').value = sbCfg.url || '';
-      document.getElementById('sbKeyInput').value = sbCfg.key || '';
+
     }
 
     function saveVolunteer() {
@@ -1629,14 +1837,7 @@
     }
 
     function updateSyncBadge(connected) {
-      const b = document.getElementById('syncBadge');
-      if (connected) {
-        b.textContent = '雲端同步中';
-        b.className = 'text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40';
-      } else {
-        b.textContent = '本機儲存';
-        b.className = 'text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700/70';
-      }
+      // Badge hidden per clean header layout
     }
 
     function saveSupabaseConfig() {
