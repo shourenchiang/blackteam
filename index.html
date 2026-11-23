@@ -2,7 +2,7 @@
 <html lang="zh-TW" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>BLACK TEAM 影視團隊服事表</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -73,7 +73,7 @@
     }
   </style>
 </head>
-<body class="min-h-screen bg-[#09090B] text-zinc-100 font-sans antialiased pb-24">
+<body style="padding-bottom:calc(5.5rem + env(safe-area-inset-bottom,0px));" class="min-h-screen bg-[#09090B] text-zinc-100 font-sans antialiased">
 
   <!-- Top Navigation Header -->
   <header class="no-screenshot sticky top-0 z-30 bg-[#09090B]/95 backdrop-blur-md border-b border-zinc-800/90">
@@ -189,13 +189,8 @@
         </select>
       </section>
 
-      <!-- Service Filter Sub-tabs (Mobile friendly) -->
-      <div class="no-screenshot flex items-center gap-1.5 overflow-x-auto pb-0.5">
-        <button onclick="setServiceFilter('all')" id="flt-all" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-black whitespace-nowrap">全部三場</button>
-        <button onclick="setServiceFilter('sat_night')" id="flt-sat_night" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 text-zinc-300 border border-zinc-800 whitespace-nowrap">週六晚堂</button>
-        <button onclick="setServiceFilter('sun_am')" id="flt-sun_am" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 text-zinc-300 border border-zinc-800 whitespace-nowrap">週日上午堂</button>
-        <button onclick="setServiceFilter('sun_pm')" id="flt-sun_pm" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 text-zinc-300 border border-zinc-800 whitespace-nowrap">週日下午堂</button>
-      </div>
+      <!-- Service Filter Sub-tabs (Mobile friendly, Special Event tab appears only when current month has special events) -->
+      <div id="serviceFilterBar" class="no-screenshot flex items-center gap-1.5 overflow-x-auto pb-0.5"></div>
 
       <!-- Services Tables Container -->
       <div id="servicesContainer" class="space-y-4"></div>
@@ -412,8 +407,8 @@
 
   </main>
 
-  <!-- Bottom Navigation Bar (Mobile-First) -->
-  <nav class="no-screenshot fixed bottom-0 inset-x-0 z-30 bg-[#09090B]/95 backdrop-blur-md border-t border-zinc-800">
+  <!-- Bottom Navigation Bar (Mobile-First, pinned strictly to bottom viewport edge) -->
+  <nav style="position:fixed;bottom:0;left:0;right:0;padding-bottom:env(safe-area-inset-bottom,0px);transform:translate3d(0,0,0);-webkit-transform:translate3d(0,0,0);" class="no-screenshot z-40 bg-[#09090B] border-t border-zinc-800">
     <div class="max-w-5xl mx-auto grid grid-cols-4 h-14">
       <button onclick="switchTab('schedule')" id="nav-schedule" class="flex flex-col items-center justify-center gap-0.5 text-amber-400 font-bold">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -574,6 +569,66 @@
     </div>
   </div>
 
+  <!-- Special Event Modal (Add / Edit Special Events for Current Month) -->
+  <div id="specialEventModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[#121215] border border-zinc-700 rounded-2xl max-w-lg w-full p-4 sm:p-5 space-y-3 shadow-2xl max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between shrink-0">
+        <div>
+          <h3 id="specialEventModalTitle" class="text-base font-extrabold text-amber-400">新增特別聚會</h3>
+          <p class="text-[11px] text-zinc-400 mt-0.5">僅在有新增特別聚會的月份顯示「特別聚會」分頁；未新增的月份不會出現。</p>
+        </div>
+        <button onclick="closeSpecialEventModal()" class="text-zinc-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <input type="hidden" id="editSpecialEventId" value="" />
+
+      <div class="overflow-y-auto space-y-3 pr-1 flex-1 text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="block font-bold text-zinc-300 mb-1">聚會名稱 *</label>
+            <input type="text" id="spEventTitle" placeholder="例如：現場錄製音樂專輯 / 聖誕節戲劇 / 夢想之家支援攝影"
+              class="w-full px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-700 text-white focus:outline-none focus:border-amber-500" />
+          </div>
+          <div>
+            <label class="block font-bold text-zinc-300 mb-1">日期 *</label>
+            <input type="date" id="spEventDate"
+              class="w-full px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-700 text-white focus:outline-none focus:border-amber-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="block font-bold text-zinc-300 mb-1">時間／備註（選填）</label>
+            <input type="text" id="spEventTimeNote" placeholder="例如：19:30 / 夢想之家"
+              class="w-full px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-700 text-white focus:outline-none focus:border-amber-500" />
+          </div>
+          <div>
+            <label class="block font-bold text-zinc-300 mb-1">團隊幹部／負責人（選填）</label>
+            <input type="text" id="spEventLeader" placeholder="例如：團隊Cover：守仁"
+              class="w-full px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-700 text-white focus:outline-none focus:border-amber-500" />
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="font-bold text-zinc-300">所需崗位與人員安排（可先填寫崗位與同工，也可留空）</label>
+            <button type="button" onclick="addSpecialRoleRow('', '')" class="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-[11px] font-bold text-amber-400">
+              + 新增崗位
+            </button>
+          </div>
+          <div id="spRolesRowsContainer" class="space-y-1.5"></div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 shrink-0 pt-2 border-t border-zinc-800">
+        <button onclick="closeSpecialEventModal()" class="px-4 py-2 rounded-xl bg-zinc-800 text-xs font-semibold text-zinc-300">取消</button>
+        <button onclick="saveSpecialEvent()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-extrabold">
+          儲存特別聚會
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification -->
   <div id="toast" class="hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-zinc-900 border border-amber-500/60 text-xs font-bold text-amber-300 shadow-2xl whitespace-nowrap"></div>
 
@@ -635,7 +690,8 @@
       blackouts: {},  // { "YYYY-MM": { "sat_night_YYYY-MM-DD": ["volId1"] } }
       schedules: {},  // { "YYYY-MM": { "sat_night_YYYY-MM-DD": { "控場": { volId: "...", isSupport: false } } } }
       speakers: {},   // { "sat_night_YYYY-MM-DD": "講員姓名" }
-      songs: {}       // { "sat_night_YYYY-MM-DD": [{ title: "歌名", url: "https://..." }] }
+      songs: {},      // { "sat_night_YYYY-MM-DD": [{ title: "歌名", url: "https://..." }] }
+      specialEvents: {} // { "YYYY-MM": [ { id, title, date, timeNote, leader, slots: [{ role, volId, isSupport }] } ] }
     };
 
     let state = loadState();
@@ -659,7 +715,8 @@
           ...parsed,
           serviceLeaders: { ...DEFAULT_STATE.serviceLeaders, ...(parsed.serviceLeaders || {}) },
           serviceTimes: { ...DEFAULT_STATE.serviceTimes, ...(parsed.serviceTimes || {}) },
-          deadlineRules: { ...DEFAULT_STATE.deadlineRules, ...(parsed.deadlineRules || {}) }
+          deadlineRules: { ...DEFAULT_STATE.deadlineRules, ...(parsed.deadlineRules || {}) },
+          specialEvents: { ...(parsed.specialEvents || {}) }
         };
       } catch (e) {
         return JSON.parse(JSON.stringify(DEFAULT_STATE));
@@ -1029,16 +1086,50 @@
       }
     }
 
+    function getMonthSpecialEvents(y = currentYear, m = currentMonth) {
+      const mk = getMonthKey(y, m);
+      return (state.specialEvents && state.specialEvents[mk]) || [];
+    }
+
+    function renderServiceFilterBar() {
+      const bar = document.getElementById('serviceFilterBar');
+      if (!bar) return;
+      const specials = getMonthSpecialEvents();
+      const hasSpecials = specials.length > 0;
+
+      // If user was on 'special' tab in a month that has no special events, fall back to 'all'
+      if (serviceFilter === 'special' && !hasSpecials) {
+        serviceFilter = 'all';
+      }
+
+      const tabs = [
+        { id: 'all', label: '全部三場' },
+        { id: 'sat_night', label: '週六晚堂' },
+        { id: 'sun_am', label: '週日上午堂' },
+        { id: 'sun_pm', label: '週日下午堂' }
+      ];
+      if (hasSpecials) {
+        tabs.push({ id: 'special', label: `特別聚會 (${specials.length})` });
+      }
+
+      bar.innerHTML = tabs.map(t => {
+        const active = serviceFilter === t.id;
+        const cls = t.id === 'special'
+          ? (active
+              ? 'px-3 py-1.5 rounded-lg text-xs font-extrabold bg-emerald-400 text-black whitespace-nowrap shadow'
+              : 'px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-950/90 text-emerald-300 border border-emerald-700/80 whitespace-nowrap')
+          : (active
+              ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-black whitespace-nowrap'
+              : 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 text-zinc-300 border border-zinc-800 whitespace-nowrap');
+        return `<button onclick="setServiceFilter('${t.id}')" id="flt-${t.id}" class="${cls}">${t.label}</button>`;
+      }).join('') + (isAdmin
+        ? `<button onclick="openSpecialEventModal()" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-zinc-900 hover:bg-zinc-800 text-emerald-300 border border-emerald-700/60 whitespace-nowrap">+ 新增特別聚會</button>`
+        : '');
+    }
+
     function setServiceFilter(flt) {
       serviceFilter = flt;
-      ['all', 'sat_night', 'sun_am', 'sun_pm'].forEach(s => {
-        const btn = document.getElementById(`flt-${s}`);
-        if (btn) {
-          btn.className = s === flt
-            ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-black whitespace-nowrap'
-            : 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 text-zinc-300 border border-zinc-800 whitespace-nowrap';
-        }
-      });
+      renderServiceFilterBar();
       renderScheduleTables();
     }
 
@@ -1131,12 +1222,19 @@
       const activeSupportVolId = document.getElementById('supportVolunteerSelect').value;
       const isScMode = document.body.classList.contains('screenshot-mode');
 
-      const visibleServices = SERVICES.filter(s => {
-        if (isScMode) return screenshotScope === 'all' || screenshotScope === s.id;
-        return serviceFilter === 'all' || serviceFilter === s.id;
-      });
+      const monthSpecials = getMonthSpecialEvents();
+      const showSpecials = !isScMode && (serviceFilter === 'special' || (serviceFilter === 'all' && monthSpecials.length > 0));
 
-      container.innerHTML = visibleServices.map(srv => {
+      const visibleServices = serviceFilter === 'special'
+        ? []
+        : SERVICES.filter(s => {
+            if (isScMode) return screenshotScope === 'all' || screenshotScope === s.id;
+            return serviceFilter === 'all' || serviceFilter === s.id;
+          });
+
+      const specialHtml = showSpecials ? renderSpecialEventsSection(monthSpecials, activeSupportVolId) : '';
+
+      container.innerHTML = specialHtml + visibleServices.map(srv => {
         const dates = getServiceDatesForMonth(srv.id, currentYear, currentMonth);
         const leaderText = state.serviceLeaders[srv.id] || '';
 
@@ -1362,7 +1460,243 @@
       }).join('');
     }
 
-    // Schedule Actions
+    function renderSpecialEventsSection(specials, activeSupportVolId) {
+      if (!specials || specials.length === 0) return '';
+      return specials.map(ev => {
+        const dateParts = (ev.date || '').split('-');
+        const shortDate = dateParts.length === 3 ? `${Number(dateParts[1])}/${Number(dateParts[2])}` : (ev.date || '');
+        const slots = ev.slots || [];
+
+        const rowsHtml = slots.length > 0 ? slots.map((sl, sIdx) => {
+          const vol = sl.volId ? state.volunteers.find(v => v.id === sl.volId) : null;
+          let assigneeHtml = '';
+
+          if (isAdmin) {
+            const opts = state.volunteers.map(v =>
+              `<option value="${v.id}" ${sl.volId === v.id ? 'selected' : ''}>${escapeHtml(v.name)}</option>`
+            ).join('');
+            assigneeHtml = `
+              <select onchange="assignSpecialSlot('${ev.id}', ${sIdx}, this.value)"
+                class="px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-xs text-white focus:outline-none focus:border-amber-500">
+                <option value="">-- 空缺 --</option>
+                ${opts}
+              </select>
+            `;
+          } else if (vol) {
+            if (sl.isSupport) {
+              const canUnclaim = activeSupportVolId && activeSupportVolId === vol.id;
+              assigneeHtml = `
+                <span ${canUnclaim ? `onclick="toggleSpecialSlotSupport('${ev.id}', ${sIdx})"` : ''}
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-red-950/90 border border-red-700 text-red-200 text-xs font-bold ${canUnclaim ? 'cursor-pointer hover:bg-red-900' : ''}">
+                  <span>${escapeHtml(vol.name)}</span>
+                  <span class="text-[10px] text-red-300">(支援)</span>
+                </span>
+              `;
+            } else {
+              assigneeHtml = `<span class="text-xs font-bold text-zinc-100">${escapeHtml(vol.name)}</span>`;
+            }
+          } else if (activeSupportVolId) {
+            assigneeHtml = `
+              <button onclick="toggleSpecialSlotSupport('${ev.id}', ${sIdx})"
+                class="px-2.5 py-1 rounded bg-red-950/80 hover:bg-red-900 border border-red-800 text-[11px] font-bold text-red-200 transition">
+                + 支援
+              </button>
+            `;
+          } else {
+            assigneeHtml = `<span class="text-xs text-zinc-500">待排／徵求支援</span>`;
+          }
+
+          return `
+            <div class="py-2 px-3 flex items-center justify-between gap-2 border-t border-zinc-800/80">
+              <span class="text-xs font-extrabold text-amber-300">${escapeHtml(sl.role || '支援崗位')}</span>
+              <div>${assigneeHtml}</div>
+            </div>
+          `;
+        }).join('') : `<div class="py-3 px-3 text-xs text-zinc-500 border-t border-zinc-800/80">尚未設定崗位</div>`;
+
+        return `
+          <section class="bg-[#121215] border border-emerald-700/60 rounded-xl overflow-hidden shadow-lg">
+            <div class="px-3 py-2 bg-emerald-950/40 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-md border text-xs font-extrabold bg-emerald-950 text-emerald-300 border-emerald-700/80">特別聚會</span>
+                <span class="text-xs sm:text-sm font-black text-white">${escapeHtml(ev.title)}</span>
+                <span class="text-xs font-bold text-amber-300">${escapeHtml(shortDate)}</span>
+                ${ev.timeNote ? `<span class="text-[11px] text-zinc-300 bg-zinc-950/80 px-2 py-0.5 rounded border border-zinc-800">${escapeHtml(ev.timeNote)}</span>` : ''}
+                ${ev.leader ? `<span class="text-[11px] text-amber-200/90">${escapeHtml(ev.leader)}</span>` : ''}
+              </div>
+              ${isAdmin ? `
+                <div class="flex items-center gap-1.5">
+                  <button onclick="openSpecialEventModal('${ev.id}')" class="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-[11px] font-bold text-amber-300">編輯</button>
+                  <button onclick="deleteSpecialEvent('${ev.id}')" class="px-2 py-1 rounded bg-zinc-900 hover:bg-red-950 border border-zinc-700 text-[11px] font-bold text-red-400">刪除</button>
+                </div>
+              ` : ''}
+            </div>
+            <div class="divide-y divide-zinc-800/40">${rowsHtml}</div>
+          </section>
+        `;
+      }).join('');
+    }
+
+    function openSpecialEventModal(eventId = '') {
+      const mk = getMonthKey();
+      const list = (state.specialEvents && state.specialEvents[mk]) || [];
+      const existing = eventId ? list.find(e => e.id === eventId) : null;
+
+      document.getElementById('editSpecialEventId').value = existing ? existing.id : '';
+      document.getElementById('specialEventModalTitle').textContent = existing ? '編輯特別聚會' : `新增特別聚會（${currentYear}年 ${currentMonth}月）`;
+      document.getElementById('spEventTitle').value = existing ? existing.title : '';
+
+      const defaultIso = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
+      document.getElementById('spEventDate').value = existing && existing.date ? existing.date : defaultIso;
+      document.getElementById('spEventTimeNote').value = existing ? (existing.timeNote || '') : '';
+      document.getElementById('spEventLeader').value = existing ? (existing.leader || '') : '';
+
+      const rowsBox = document.getElementById('spRolesRowsContainer');
+      rowsBox.innerHTML = '';
+
+      if (existing && Array.isArray(existing.slots) && existing.slots.length > 0) {
+        existing.slots.forEach(sl => addSpecialRoleRow(sl.role || '', sl.volId || '', !!sl.isSupport));
+      } else {
+        ['控場', '導播', '靜態攝影', 'PPR'].forEach(r => addSpecialRoleRow(r, '', false));
+      }
+
+      document.getElementById('specialEventModal').classList.remove('hidden');
+    }
+
+    function closeSpecialEventModal() {
+      document.getElementById('specialEventModal').classList.add('hidden');
+    }
+
+    function addSpecialRoleRow(role = '', volId = '', isSupport = false) {
+      const container = document.getElementById('spRolesRowsContainer');
+      const volOpts = state.volunteers.map(v =>
+        `<option value="${v.id}" ${v.id === volId ? 'selected' : ''}>${escapeHtml(v.name)}</option>`
+      ).join('');
+
+      const row = document.createElement('div');
+      row.className = 'sp-role-row flex items-center gap-1.5';
+      row.dataset.isSupport = isSupport ? '1' : '0';
+      row.innerHTML = `
+        <input type="text" value="${escapeHtml(role)}" placeholder="崗位名稱（如：靜態攝影）"
+          class="sp-role-input flex-1 px-2.5 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-xs text-amber-300 font-bold focus:outline-none focus:border-amber-500" />
+        <select class="sp-vol-select px-2.5 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-xs text-white focus:outline-none focus:border-amber-500">
+          <option value="">-- 暫不指定 --</option>
+          ${volOpts}
+        </select>
+        <button type="button" onclick="this.closest('.sp-role-row').remove()"
+          class="px-2 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-red-400 text-xs">✕</button>
+      `;
+      container.appendChild(row);
+    }
+
+    function saveSpecialEvent() {
+      const title = document.getElementById('spEventTitle').value.trim();
+      const date = document.getElementById('spEventDate').value;
+      if (!title) {
+        showToast('請輸入特別聚會名稱');
+        return;
+      }
+      if (!date) {
+        showToast('請選擇聚會日期');
+        return;
+      }
+
+      const timeNote = document.getElementById('spEventTimeNote').value.trim();
+      const leader = document.getElementById('spEventLeader').value.trim();
+      const slots = [];
+      document.querySelectorAll('#spRolesRowsContainer .sp-role-row').forEach(row => {
+        const role = row.querySelector('.sp-role-input').value.trim();
+        const volId = row.querySelector('.sp-vol-select').value;
+        const isSupport = row.dataset.isSupport === '1';
+        if (role) {
+          slots.push({ role, volId, isSupport });
+        }
+      });
+
+      const [ey, em] = date.split('-').map(Number);
+      const targetMk = `${ey}-${String(em).padStart(2, '0')}`;
+      if (!state.specialEvents) state.specialEvents = {};
+      if (!state.specialEvents[targetMk]) state.specialEvents[targetMk] = [];
+
+      const editId = document.getElementById('editSpecialEventId').value;
+      if (editId) {
+        // Remove old id across months if date changed month
+        Object.keys(state.specialEvents).forEach(k => {
+          state.specialEvents[k] = state.specialEvents[k].filter(item => item.id !== editId);
+        });
+        state.specialEvents[targetMk].push({
+          id: editId,
+          title,
+          date,
+          timeNote,
+          leader,
+          slots
+        });
+        showToast('已更新特別聚會');
+      } else {
+        state.specialEvents[targetMk].push({
+          id: 'sp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          title,
+          date,
+          timeNote,
+          leader,
+          slots
+        });
+        showToast('已新增特別聚會');
+      }
+
+      currentYear = ey;
+      currentMonth = em;
+      serviceFilter = 'special';
+      saveState();
+      closeSpecialEventModal();
+      renderAll();
+    }
+
+    function deleteSpecialEvent(eventId) {
+      const mk = getMonthKey();
+      if (!state.specialEvents || !state.specialEvents[mk]) return;
+      state.specialEvents[mk] = state.specialEvents[mk].filter(e => e.id !== eventId);
+      if (state.specialEvents[mk].length === 0) {
+        delete state.specialEvents[mk];
+        if (serviceFilter === 'special') serviceFilter = 'all';
+      }
+      saveState();
+      renderAll();
+      showToast('已刪除特別聚會');
+    }
+
+    function assignSpecialSlot(eventId, slotIdx, volId) {
+      const mk = getMonthKey();
+      const ev = (state.specialEvents[mk] || []).find(e => e.id === eventId);
+      if (!ev || !ev.slots || !ev.slots[slotIdx]) return;
+      ev.slots[slotIdx].volId = volId;
+      ev.slots[slotIdx].isSupport = false;
+      saveState();
+      renderScheduleTables();
+    }
+
+    function toggleSpecialSlotSupport(eventId, slotIdx) {
+      const volId = document.getElementById('supportVolunteerSelect').value;
+      if (!volId) return;
+      const mk = getMonthKey();
+      const ev = (state.specialEvents[mk] || []).find(e => e.id === eventId);
+      if (!ev || !ev.slots || !ev.slots[slotIdx]) return;
+      const sl = ev.slots[slotIdx];
+      if (sl.volId === volId && sl.isSupport) {
+        sl.volId = '';
+        sl.isSupport = false;
+        showToast('已取消支援認領');
+      } else if (!sl.volId) {
+        sl.volId = volId;
+        sl.isSupport = true;
+        showToast('已認領支援該崗位！');
+      }
+      saveState();
+      renderScheduleTables();
+    }
+
+        // Schedule Actions
     function updateSpeaker(slotKey, val) {
       const trimmed = val.trim();
       const prevVal = (state.speakers[slotKey] || '').trim();
@@ -1865,15 +2199,9 @@
       window._currentMyScheduleVolName = state.volunteers.find(v => v.id === volId)?.name || '';
 
       container.innerHTML = `
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5 p-2.5 rounded-xl bg-zinc-950 border border-zinc-800">
+        <div class="flex items-center justify-between mb-2.5 px-1">
           <div class="text-xs font-bold text-zinc-300">
             本月共 <span class="text-amber-400 text-sm">${items.length}</span> 場服事
-          </div>
-          <div class="flex flex-wrap items-center gap-1.5">
-            <button onclick="downloadAllMyCalendarICS()" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-xs font-extrabold flex items-center gap-1 shadow transition">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-              <span>一鍵匯入全部至手機行事曆 (Apple / Google)</span>
-            </button>
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -2205,20 +2533,6 @@
         if (a.parentNode) document.body.removeChild(a);
         URL.revokeObjectURL(url);
       }, 1500);
-    }
-
-    function downloadAllMyCalendarICS() {
-      const items = window._currentMyScheduleItems || [];
-      const volName = window._currentMyScheduleVolName || '義工';
-      if (items.length === 0) {
-        showToast('本月尚無可匯入的服事場次');
-        return;
-      }
-      const ics = generateICSContent(items, volName);
-      triggerICSDownload(ics, `BLACK_TEAM_${currentYear}年${currentMonth}月_${volName}.ics`);
-      if (!isInAppBrowser()) {
-        showToast('正在開啟手機行事曆，請點選「加入全部」！');
-      }
     }
 
     function downloadSingleCalendarICS(idx) {
@@ -2614,6 +2928,7 @@
 
     function renderAll() {
       document.getElementById('currentMonthLabel').textContent = `${currentYear}年 ${currentMonth}月`;
+      renderServiceFilterBar();
       syncVolunteerDropdowns();
       renderRules();
       renderScheduleTables();
